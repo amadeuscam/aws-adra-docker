@@ -16,7 +16,6 @@ jobs:
         with:
           username: ${{secrets.DOCKERHUB_USERNAME}}
           password: ${{secrets.DOCKERHUB_TOKEN}}
-          logout: true
       - name: Build web app image
         run: docker build -t amadeuscam/adra_web .
       - name: Build nginx image
