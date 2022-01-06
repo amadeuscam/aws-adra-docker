@@ -7,13 +7,13 @@ on:
 jobs:
   build_docker_images:
     name: build docker images
-    runs-on: ubuntu-latest
+    runs-on: [ubuntu-latest]
     steps:
       - name: checkout
         uses: actions/checkout@v2
 
       - name: Docker Login
-        uses: docker/login-action@v1
+        uses: docker/login-action@v1.8.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -26,7 +26,7 @@ jobs:
 
       - name: Push to web app
         run: docker push amadeuscam/adra_web
-
+        
       - name: Push to nginx
         run: docker push amadeuscam/adra_nginx
 
