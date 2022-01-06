@@ -20,7 +20,7 @@ jobs:
           logout: true
 
       - name: Build web app image
-        run: docker build -t amadeuscam/adra_web ./adra-t
+        run: docker build -t amadeuscam/adra_web .
 
       - name: Build nginx image
         run: docker build -t amadeuscam/adra_nginx ./nginx
