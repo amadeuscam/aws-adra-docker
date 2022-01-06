@@ -9,6 +9,8 @@ ALLOWED_HOSTS = ['*']
 NAME_DB = os.environ.get("DATABASE_NAME")
 USER_DB = os.environ.get("MYSQL_USER")
 PASSWORD_DB = os.environ.get("MYSQL_PASSWORD")
+HOST = os.environ.get("MYSQL_HOST")
+
 
 DATABASES = {
     'default': {
@@ -16,12 +18,12 @@ DATABASES = {
         'NAME': NAME_DB,
         'USER': USER_DB,
         'PASSWORD': PASSWORD_DB,
-        'HOST': "localhost",
+        'HOST': HOST,
         'PORT': 3306,
     }
 }
 
-EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+EMAIL_BACKEND = str(os.environ.get("EMAIL_BACKEND_SENDGRID"))
 SENDGRID_API_KEY = str(os.environ.get("SENDGRID_API_KEY"))
 SENDGRID_ALIMENTOS_TEMPLATE_ID = str(os.environ.get("SENDGRID_TEMPLATE_ID"))
 SENDGRID_SANDBOX_MODE_IN_DEBUG = False

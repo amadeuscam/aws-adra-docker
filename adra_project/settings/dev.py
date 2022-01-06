@@ -9,6 +9,7 @@ ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 NAME_DB = os.environ.get("DATABASE_NAME")
 USER_DB = os.environ.get("MYSQL_USER")
 PASSWORD_DB = os.environ.get("MYSQL_PASSWORD")
+HOST = os.environ.get("MYSQL_HOST")
 
 DATABASES = {
     'default': {
@@ -17,8 +18,7 @@ DATABASES = {
         'NAME': NAME_DB,
         'USER': USER_DB,
         'PASSWORD': PASSWORD_DB,
-        # 'HOST': "127.0.0.1",
-        'HOST': "db",
+        'HOST': HOST,
         'PORT': 3306,
     }
 }
