@@ -31,7 +31,7 @@ jobs:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
           aws_secret_key: ${{ secrets.AWS_ACCESS_SECRET_KEY }}
           application_name: ${{ secrets.AWS_APPLICATION_NAME }}
-          environment_name: ${{ secrets.AWS_APP_ENV}}
+          environment_name: ${{ secrets.AWS_APP_ENV }}
           version_label: "app-cbe0-210131_121135"
           region: eu-west-3
 
@@ -63,20 +63,19 @@ jobs:
   #       pip install -r requirements.txt
   #   - name: Run Migrations
   #     run: python manage.py migrate
-  #     env: 
+  #     env:
   #       mysql_user: lucian
   #       mysql_password: masina
   #       SECRET_KEY: 1$$*08nt$$1zy=5&+_vmdhfu7j5#*w_yb9_%+0q7gvr=v)t-51o_
 
-       
   #   - name: Run Tests
   #     run: |
   #       python manage.py test
-  #     env: 
+  #     env:
   #       mysql_user: lucian
   #       mysql_password: masina
   #       SECRET_KEY: 1$$*08nt$$1zy=5&+_vmdhfu7j5#*w_yb9_%+0q7gvr=v)t-51o_
-    
+
   # deploy:
   #   runs-on: ubuntu-latest
   #   steps:
