@@ -32,13 +32,13 @@ jobs:
         run: docker push amadeuscam/adra_nginx
 
       - name: Deploy to EB
-        uses: einaregilsson/beanstalk-deploy@v14
+        uses: einaregilsson/beanstalk-deploy@v20
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
           aws_secret_key: ${{ secrets.AWS_ACCESS_SECRET_KEY }}
           application_name: ${{ secrets.AWS_APPLICATION_NAME }}
           environment_name: ${{ secrets.AWS_APP_ENV }}
-          version_label: 1
+          # version_label: 1
           region: eu-west-3
 
   # build:
