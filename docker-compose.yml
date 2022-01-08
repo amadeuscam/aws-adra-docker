@@ -24,15 +24,16 @@ services:
       - DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
       - REDIS_URL=$REDIS_URL
 
-  celery:
-    image: "amadeuscam/adra_web"
-    mem_limit: 128m
-    hostname: celery
+  # celery:
+  #   image: "amadeuscam/adra_web"
+  #   mem_limit: 128m
+  #   hostname: celery
    
-  celery-beat:
-    image: "amadeuscam/adra_web"
-    mem_limit: 128m
-    hostname: celery-beat
+  # celery-beat:
+  #   image: "amadeuscam/adra_web"
+  #   mem_limit: 128m
+  #   hostname: celery-beat
+
   nginx:
     image: "amadeuscam/adra_nginx"
     mem_limit: 128m
