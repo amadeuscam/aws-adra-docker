@@ -2,7 +2,10 @@ version: "3"
 services:
   web:
     image: "amadeuscam/adra_web"
-    mem_limit: 128m
+    # mem_limit: 128m
+    command:  >
+      sh -c "python manage.py migrate --no-input &&
+            gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
     hostname: web
     ports:
       - "8000:8000"
