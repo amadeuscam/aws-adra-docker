@@ -225,7 +225,8 @@ LOGGING = {
     'loggers': {
         '': {
             'level': 'DEBUG',
-            'handlers': ['console', 'file'],
+            # 'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'propagate': True,
         }
     },
@@ -233,9 +234,9 @@ LOGGING = {
         'console': {
             'format': '%(asctime)s  %(name)-12s %(levelname)-8s %(message)s'
         },
-        'file': {
-            'format': '%(asctime)s  %(name)-12s %(levelname)-8s %(message)s'
-        }
+        # 'file': {
+        #     'format': '%(asctime)s  %(name)-12s %(levelname)-8s %(message)s'
+        # }
 
     },
     'handlers': {
@@ -243,13 +244,13 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'console'
         },
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'adra_logs/debug.log'),
-            # 'maxBytes': '16777216',  # 16megabytes
-            'formatter': 'file'
-        }
+        # 'file': {
+        #     'level': 'DEBUG',
+        #     'class': 'logging.FileHandler',
+        #     'filename': os.path.join(BASE_DIR, 'adra_logs/debug.log'),
+        #     # 'maxBytes': '16777216',  # 16megabytes
+        #     'formatter': 'file'
+        # }
     },
 
 }
