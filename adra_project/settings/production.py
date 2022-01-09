@@ -5,20 +5,14 @@ DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
-# Database
-NAME_DB = os.getenv("DATABASE_NAME")
-USER_DB = os.getenv("MYSQL_USER")
-PASSWORD_DB = os.getenv("MYSQL_PASSWORD")
-HOST = os.getenv("MYSQL_HOST")
-
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': NAME_DB,
-        'USER': USER_DB,
-        'PASSWORD': PASSWORD_DB,
-        'HOST': HOST,
+        'NAME': os.getenv("DATABASE_NAME"),
+        'USER': os.getenv("MYSQL_USER"),
+        'PASSWORD': os.getenv("MYSQL_PASSWORD"),
+        'HOST': os.getenv("MYSQL_HOST"),
         'PORT': 3306,
     }
 }
