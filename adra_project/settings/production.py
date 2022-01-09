@@ -6,10 +6,10 @@ DEBUG = False
 ALLOWED_HOSTS = ['*']
 
 # Database
-NAME_DB = os.environ.get("DATABASE_NAME")
-USER_DB = os.environ.get("MYSQL_USER")
-PASSWORD_DB = os.environ.get("MYSQL_PASSWORD")
-HOST = os.environ.get("MYSQL_HOST")
+NAME_DB = os.getenv("DATABASE_NAME")
+USER_DB = os.getenv("MYSQL_USER")
+PASSWORD_DB = os.getenv("MYSQL_PASSWORD")
+HOST = os.getenv("MYSQL_HOST")
 
 
 DATABASES = {
@@ -23,9 +23,9 @@ DATABASES = {
     }
 }
 
-EMAIL_BACKEND = str(os.environ.get("EMAIL_BACKEND_SENDGRID"))
-SENDGRID_API_KEY = str(os.environ.get("SENDGRID_API_KEY"))
-SENDGRID_ALIMENTOS_TEMPLATE_ID = str(os.environ.get("SENDGRID_TEMPLATE_ID"))
+EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+SENDGRID_API_KEY = str(os.getenv("SENDGRID_API_KEY"))
+SENDGRID_ALIMENTOS_TEMPLATE_ID = str(os.getenv("SENDGRID_TEMPLATE_ID"))
 SENDGRID_SANDBOX_MODE_IN_DEBUG = False
 
 
