@@ -4,6 +4,8 @@ services:
     image: "amadeuscam/adra_web"
     mem_limit: 128m
     hostname: web
+    ports:
+      - "8000:8000"
     environment:
       - DEBUG=$DEBUG
       - SECRET_KEY=$SECRET_KEY
