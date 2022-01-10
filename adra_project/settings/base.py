@@ -254,6 +254,7 @@ LOGGING = {
 
 }
 
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# para cuando tengo por fin https
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
