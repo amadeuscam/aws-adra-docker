@@ -7,6 +7,8 @@ import sys
 def main():
     os.environ.get('DJANGO_SETTINGS_MODULE',
                    'adra_project.settings.dev')
+    print(os.environ.get('DJANGO_SETTINGS_MODULE',
+                         'adra_project.settings.dev'))
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
