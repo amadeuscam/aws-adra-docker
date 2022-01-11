@@ -6,7 +6,7 @@ services:
     command: >
       sh -c "python manage.py migrate --no-input &&
             python manage.py collectstatic --no-input &&
-            celery --app=adra_project beat -l info &&
+            celery --app=adra_project worker -l info &&
             celery --app=adra_project beat -l info &&
             gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
     hostname: web
