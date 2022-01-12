@@ -1,6 +1,7 @@
 version: "3"
 services:
-  web: &web
+  web:
+    &web
     image: "amadeuscam/adra_web"
     # mem_limit: 128m
     command: >
@@ -8,6 +9,8 @@ services:
             python manage.py collectstatic --no-input &&
             gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
     hostname: web
+    volumes:
+      - static:/static/
     ports:
       - "8000:8000"
     environment:
@@ -59,12 +62,13 @@ services:
     image: "amadeuscam/adra_nginx"
     mem_limit: 128m
     hostname: nginx
+    volumes:
+      - static:/static/
     depends_on:
       - web
     ports:
       - "80:80"
       - "0.0.0.0:8888:8888"
-
 
 volumes:
   static: {}
