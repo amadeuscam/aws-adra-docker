@@ -35,14 +35,14 @@ services:
 
   celery:
     <<: *web
-    image: "amadeuscam/adra_web"
+    image: "amadeuscam/adra_celery"
     command: celery --app=adra_project worker -l info
     depends_on:
       - redis
 
   celery-beat:
     <<: *web
-    image: "amadeuscam/adra_web"
+    image: "amadeuscam/adra_beat"
     command: celery --app=adra_project beat -l info
     depends_on:
       - redis
