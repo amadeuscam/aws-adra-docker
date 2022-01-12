@@ -1,13 +1,11 @@
 version: "3"
 services:
-  web:
+  web: &web
     image: "amadeuscam/adra_web"
     # mem_limit: 128m
     command: >
       sh -c "python manage.py migrate --no-input &&
             python manage.py collectstatic --no-input &&
-            celery --app=adra_project worker -l info &&
-            celery --app=adra_project beat -l info &&
             gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
     hostname: web
     ports:
@@ -32,21 +30,19 @@ services:
       - DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
       - REDIS_URL=$REDIS_URL
 
-  # celery:
-  #   image: "amadeuscam/adra_web"
-  #   mem_limit: 128m
-  #   hostname: celery
-  #   command: celery --app=adra_project worker -l info
-  #   depends_on:
-  #     - redis
+  celery:
+    <<: *web
+    image: "amadeuscam/adra_web"
+    command: celery --app=adra_project worker -l info
+    depends_on:
+      - redis
 
-  # celery-beat:
-  #   image: "amadeuscam/adra_web"
-  #   mem_limit: 128m
-  #   hostname: celery-beat
-  #   command: celery --app=adra_project beat -l info
-  #   depends_on:
-  #     - redis
+  celery-beat:
+    <<: *web
+    image: "amadeuscam/adra_web"
+    command: celery --app=adra_project beat -l info
+    depends_on:
+      - redis
 
   flower:
     image: mher/flower
@@ -57,7 +53,7 @@ services:
         "--port=8888"
       ]
     ports:
-      - 8888:8888s
+      - 8888:8888
 
   nginx:
     image: "amadeuscam/adra_nginx"
@@ -67,3 +63,8 @@ services:
       - web
     ports:
       - "80:80"
+      - "0.0.0.0:8888:8888"
+
+
+volumes:
+  static: {}
