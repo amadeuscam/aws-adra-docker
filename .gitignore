@@ -2,7 +2,7 @@
 .idea/
 *.pyc
 *.pyo
-.env
+.env*
 celerybeat-schedule.bak
 celerybeat-schedule.dat
 celerybeat-schedule.dir

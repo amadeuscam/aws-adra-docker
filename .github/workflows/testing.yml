@@ -1,118 +1,158 @@
-name: Push images to Dockerhub and deploy on ELastic Beanstalk
-#EVENT
+name: Deploy to ECR
+
 on:
   push:
     branches: [main]
 
 jobs:
-  build_docker_images:
-    name: build docker images
-    runs-on: [ubuntu-latest]
+  build:
+    name: Build Image
+    runs-on: ubuntu-latest
+
     steps:
-      - name: checkout
+      - name: Check out code
         uses: actions/checkout@v2
 
-      - name: Generate Deployment Package
-        run: zip -r deploy.zip . -x '*.git*'
-
-      - name: Get timestamp
-        uses: gerred/actions/current-time@master
-        id: current-time
-
-      - name: Run string replace
-        uses: frabert/replace-string-action@master
-        id: format-time
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
         with:
-          pattern: '[:\.]+'
-          string: "${{ steps.current-time.outputs.time }}"
-          replace-with: "-"
-          flags: "g"
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
 
-      - name: Docker Login
-        uses: docker/login-action@v1.8.0
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          logout: true
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build web app image
-        run: docker build -t amadeuscam/adra_web .
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: django-ec2
+          IMAGE_TAG_WEB: web
+          IMAGE_TAG_NGINX: web
+        run: |
+          docker-compose build
+          docker-compose push
+          # docker-compose build build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_WEB .
+          # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX .
+          # docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_WEB
+          # docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX
 
-      - name: Build nginx image
-        run: docker build -t amadeuscam/adra_nginx ./nginx
+# name: Push images to Dockerhub and deploy on ELastic Beanstalk
+# #EVENT
+# on:
+#   push:
+#     branches: [main]
 
-      - name: Push to web app
-        run: docker push amadeuscam/adra_web
+# jobs:
+#   build_docker_images:
+#     name: build docker images
+#     runs-on: [ubuntu-latest]
+#     steps:
+#       - name: checkout
+#         uses: actions/checkout@v2
 
-      - name: Push to nginx
-        run: docker push amadeuscam/adra_nginx
+#       - name: Generate Deployment Package
+#         run: zip -r deploy.zip . -x '*.git*'
 
-      - name: Deploy to EB
-        uses: einaregilsson/beanstalk-deploy@v20
-        with:
-          aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
-          aws_secret_key: ${{ secrets.AWS_ACCESS_SECRET_KEY }}
-          application_name: ${{ secrets.AWS_APPLICATION_NAME }}
-          environment_name: ${{ secrets.AWS_APP_ENV }}
-          version_label: 1.4
-          region: eu-west-3
-          use_existing_version_if_available: "true"
-          deployment_package: deploy.zip
+#       - name: Get timestamp
+#         uses: gerred/actions/current-time@master
+#         id: current-time
 
-  # build:
+#       - name: Run string replace
+#         uses: frabert/replace-string-action@master
+#         id: format-time
+#         with:
+#           pattern: '[:\.]+'
+#           string: "${{ steps.current-time.outputs.time }}"
+#           replace-with: "-"
+#           flags: "g"
 
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     max-parallel: 4
-  #     matrix:
-  #       python-version: [3.6]
+#       - name: Docker Login
+#         uses: docker/login-action@v1.8.0
+#         with:
+#           username: ${{ secrets.DOCKERHUB_USERNAME }}
+#           password: ${{ secrets.DOCKERHUB_TOKEN }}
+#           logout: true
 
-  #   services:
-  #     mysql:
-  #       image: mysql:5.7
-  #       env:
-  #         MYSQL_ROOT_PASSWORD: root
-  #         MYSQL_DATABASE: mysql
-  #       ports: ['3306:3306']
+#       - name: Build web app image
+#         run: docker build -t amadeuscam/adra_web .
 
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Set up Python 3.6
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: 3.6
-  #   - name: Install Dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install -r requirements.txt
-  #   - name: Run Migrations
-  #     run: python manage.py migrate
-  #     env:
-  #       mysql_user: lucian
-  #       mysql_password: masina
-  #       SECRET_KEY: 1$$*08nt$$1zy=5&+_vmdhfu7j5#*w_yb9_%+0q7gvr=v)t-51o_
+#       - name: Build nginx image
+#         run: docker build -t amadeuscam/adra_nginx ./nginx
 
-  #   - name: Run Tests
-  #     run: |
-  #       python manage.py test
-  #     env:
-  #       mysql_user: lucian
-  #       mysql_password: masina
-  #       SECRET_KEY: 1$$*08nt$$1zy=5&+_vmdhfu7j5#*w_yb9_%+0q7gvr=v)t-51o_
+#       - name: Push to web app
+#         run: docker push amadeuscam/adra_web
 
-  # deploy:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Deploy Adra App Digital Ocean
-  #       uses: appleboy/ssh-action@v0.1.2
-  #       with:
-  #         host: ${{ secrets.SSH_HOST }}
-  #         key: ${{ secrets.SSH_KEY }}
-  #         username: ${{ secrets.SSH_USERNAME }}
-  #         passphrase: ${{ secrets.PASSPHRASE }}
+#       - name: Push to nginx
+#         run: docker push amadeuscam/adra_nginx
 
-  #         script: |
-  #           cd /home/lucian/adra-t/
-  #           git pull
-  #           echo 'masina' | sudo -S  supervisorctl restart  gunicorn
-  #           echo 'Deployment successful to digital ocean'
+#       - name: Deploy to EB
+#         uses: einaregilsson/beanstalk-deploy@v20
+#         with:
+#           aws_access_key: ${{ secrets.AWS_ACCESS_KEY }}
+#           aws_secret_key: ${{ secrets.AWS_ACCESS_SECRET_KEY }}
+#           application_name: ${{ secrets.AWS_APPLICATION_NAME }}
+#           environment_name: ${{ secrets.AWS_APP_ENV }}
+#           version_label: 1.4
+#           region: eu-west-3
+#           use_existing_version_if_available: "true"
+#           deployment_package: deploy.zip
+
+# build:
+
+#   runs-on: ubuntu-latest
+#   strategy:
+#     max-parallel: 4
+#     matrix:
+#       python-version: [3.6]
+
+#   services:
+#     mysql:
+#       image: mysql:5.7
+#       env:
+#         MYSQL_ROOT_PASSWORD: root
+#         MYSQL_DATABASE: mysql
+#       ports: ['3306:3306']
+
+#   steps:
+#   - uses: actions/checkout@v2
+#   - name: Set up Python 3.6
+#     uses: actions/setup-python@v2
+#     with:
+#       python-version: 3.6
+#   - name: Install Dependencies
+#     run: |
+#       python -m pip install --upgrade pip
+#       pip install -r requirements.txt
+#   - name: Run Migrations
+#     run: python manage.py migrate
+#     env:
+#       mysql_user: lucian
+#       mysql_password: masina
+#       SECRET_KEY: 1$$*08nt$$1zy=5&+_vmdhfu7j5#*w_yb9_%+0q7gvr=v)t-51o_
+
+#   - name: Run Tests
+#     run: |
+#       python manage.py test
+#     env:
+#       mysql_user: lucian
+#       mysql_password: masina
+#       SECRET_KEY: 1$$*08nt$$1zy=5&+_vmdhfu7j5#*w_yb9_%+0q7gvr=v)t-51o_
+
+# deploy:
+#   runs-on: ubuntu-latest
+#   steps:
+#     - name: Deploy Adra App Digital Ocean
+#       uses: appleboy/ssh-action@v0.1.2
+#       with:
+#         host: ${{ secrets.SSH_HOST }}
+#         key: ${{ secrets.SSH_KEY }}
+#         username: ${{ secrets.SSH_USERNAME }}
+#         passphrase: ${{ secrets.PASSPHRASE }}
+
+#         script: |
+#           cd /home/lucian/adra-t/
+#           git pull
+#           echo 'masina' | sudo -S  supervisorctl restart  gunicorn
+#           echo 'Deployment successful to digital ocean'

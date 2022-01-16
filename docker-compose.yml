@@ -1,65 +1,51 @@
 version: "3"
+
 services:
   web:
-    &web
-    image: "amadeuscam/adra_web"
-    # mem_limit: 128m
-    command: >
-      sh -c "python manage.py migrate --no-input &&
-            python manage.py collectstatic --no-input &&
-            gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
+    build:
+      context: .
+    image: "530212850979.dkr.ecr.eu-west-3.amazonaws.com/django-ec2:web"
+    # command: >
+    #   sh -c "python manage.py migrate --no-input &&
+    #         python manage.py collectstatic --no-input &&
+    #         gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
+    command: "gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
     hostname: web
     volumes:
       - static:/static/
+    env_file:
+      - ./.env.prod
     ports:
       - "8000:8000"
-    environment:
-      - SECRET_KEY=$SECRET_KEY
-      - SENDGRID_API_KEY=$SENDGRID_API_KEY
-      - SENTRY_SDK_URL=$SENTRY_SDK_URL
-      - MYSQL_HOST=$MYSQL_HOST
-      - MYSQL_USER=$MYSQL_USER
-      - MYSQL_PASSWORD=$MYSQL_PASSWORD
-      - CELERY_USER=$CELERY_USER
-      - CELERY_PASSWORD=$CELERY_PASSWORD
-      - SENDGRID_TEMPLATE_ID=$SENDGRID_TEMPLATE_ID
-      - TELEGRAM_TOKEN=$TELEGRAM_TOKEN
-      - Token_KEY_USER=$Token_KEY_USER
-      - DATABASE_NAME=$DATABASE_NAME
-      - DEFAULT_EMAIL=$DEFAULT_EMAIL
-      - AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
-      - AWS_STORAGE_BUCKET_NAME=$AWS_STORAGE_BUCKET_NAME
-      - DJANGO_SETTINGS_MODULE=$DJANGO_SETTINGS_MODULE
-      - REDIS_URL=$REDIS_URL
 
   celery:
-    <<: *web
-    image: "amadeuscam/adra_celery"
+    restart: always
+    image: "530212850979.dkr.ecr.eu-west-3.amazonaws.com/django-ec2:web"
     command: celery --app=adra_project worker -l info
-    depends_on:
-      - redis
+    env_file:
+      - ./.env.prod
 
   celery-beat:
-    <<: *web
-    image: "amadeuscam/adra_beat"
+    restart: always
+    image: "530212850979.dkr.ecr.eu-west-3.amazonaws.com/django-ec2:web"
     command: celery --app=adra_project beat -l info
-    depends_on:
-      - redis
+    env_file:
+      - ./.env.prod
 
-  flower:
-    image: mher/flower
-    command:
-      [
-        "flower",
-        "--broker=redis://redis:6379/0",
-        "--port=8888"
-      ]
-    ports:
-      - 8888:8888
+  # flower:
+  #   image: mher/flower
+  #   command:
+  #     [
+  #       "flower",
+  #       "--broker=redis://redis:6379/0",
+  #       "--port=8888"
+  #     ]
+  #   ports:
+  #     - 8888:8888
 
   nginx:
-    image: "amadeuscam/adra_nginx"
+    build: ./nginx
+    image: "530212850979.dkr.ecr.eu-west-3.amazonaws.com/django-ec2:nginx"
     mem_limit: 128m
     hostname: nginx
     volumes:
@@ -68,7 +54,8 @@ services:
       - web
     ports:
       - "80:80"
-      - "0.0.0.0:8888:8888"
+      # - "0.0.0.0:8888:8888"
+      - 443:443
 
 volumes:
   static: {}

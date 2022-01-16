@@ -209,11 +209,10 @@ sentry_sdk.init(
 )
 
 
-CELERY_BROKER_URL = str(os.environ.get("REDIS_URL"))
-CELERY_RESULT_BACKEND = str(os.environ.get("REDIS_URL"))
-CELERY_USER = str(os.environ.get("CELERY_USER"))
-CELERY_USER_PASSWORD = str(os.environ.get("CELERY_PASSWORD"))
-TELEGRAM_TOKEN_KEY = str(os.environ.get("TELEGRAM_TOKEN"))
+CELERY_BROKER_URL = str(os.getenv("REDIS_URL"))
+CELERY_USER = str(os.getenv("CELERY_USER"))
+CELERY_USER_PASSWORD = str(os.getenv("CELERY_PASSWORD"))
+TELEGRAM_TOKEN_KEY = str(os.getenv("TELEGRAM_TOKEN"))
 
 
 PLATFORM_NAME = "Adra Torrejon"
