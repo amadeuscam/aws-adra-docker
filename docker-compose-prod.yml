@@ -1,0 +1,57 @@
+version: "3"
+
+services:
+  web:
+    build:
+      context: .
+    image: "530212850979.dkr.ecr.eu-west-3.amazonaws.com/django-ec2:web"
+    command: "gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
+    hostname: web
+    volumes:
+      - static:/static/
+    # env_file:
+    #   - ./.env.prod
+    ports:
+      - "8000:8000"
+
+  celery:
+    restart: always
+    image: "530212850979.dkr.ecr.eu-west-3.amazonaws.com/django-ec2:web"
+    command: celery --app=adra_project worker -l info
+    # env_file:
+    #   - ./.env.prod
+
+  celery-beat:
+    restart: always
+    image: "530212850979.dkr.ecr.eu-west-3.amazonaws.com/django-ec2:web"
+    command: celery --app=adra_project beat -l info
+    # env_file:
+    #   - ./.env.prod
+
+  # flower:
+  #   image: mher/flower
+  #   command:
+  #     [
+  #       "flower",
+  #       "--broker=redis://redis:6379/0",
+  #       "--port=8888"
+  #     ]
+  #   ports:
+  #     - 8888:8888
+
+  nginx:
+    build: ./nginx
+    image: "530212850979.dkr.ecr.eu-west-3.amazonaws.com/django-ec2:nginx"
+    mem_limit: 128m
+    hostname: nginx
+    volumes:
+      - static:/static/
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      # - "0.0.0.0:8888:8888"
+      - 443:443
+
+volumes:
+  static: {}
