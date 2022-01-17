@@ -14,6 +14,7 @@ celery_comands.txt
 celerybeat-schedule.db
 celery_commands.txt
 .docker
+docker-compose-use-prod*
 ### Django ###
 *.log
 *.pot
