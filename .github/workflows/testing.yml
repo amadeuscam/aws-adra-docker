@@ -24,18 +24,22 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Build, tag, and push web image to Amazon ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: django-ec2
           IMAGE_TAG_WEB: web
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_WEB .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_WEB
+
+      - name: Build, tag, and push nginx image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: django-ec2
           IMAGE_TAG_NGINX: nginx
         run: |
-          # docker-compose -f docker-compose-prod.yml build
-          # docker-compose -f docker-compose-prod.yml push
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_WEB .
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_WEB
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX ./nginx
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX
 
 # name: Push images to Dockerhub and deploy on ELastic Beanstalk
