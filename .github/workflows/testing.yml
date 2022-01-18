@@ -42,6 +42,23 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX ./nginx
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX
 
+deploy:
+  runs-on: ubuntu-latest
+  steps:
+    - name: Deploy Adra App Digital Ocean
+      uses: appleboy/ssh-action@v0.1.2
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        key: ${{ secrets.SSH_KEY }}
+        username: ${{ secrets.SSH_USERNAME }}
+        passphrase: ${{ secrets.PASSPHRASE }}
+
+        script: |
+          cd /home/ubuntu/django-on-docker
+          echo 'Deployment successful to digital ocean'
+
+
+
 # name: Push images to Dockerhub and deploy on ELastic Beanstalk
 # #EVENT
 # on:
