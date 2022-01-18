@@ -1,5 +1,9 @@
 version: "3.1"
 services:
+  redis:
+    image: redis:alpine
+    ports:
+      - '6379:6379'
   nginx:
     build: ./nginx
     ports:
@@ -44,7 +48,7 @@ services:
       - static:/static/
     ports:
       - "8000:8000"
-    command:  >
+    command: >
       sh -c "python manage.py migrate --no-input &&
             gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
     env_file:
@@ -52,11 +56,6 @@ services:
     depends_on:
       - db
       - redis
-
-  redis:
-    image: redis:alpine
-    ports:
-      - '6379:6379'
 
   celery:
     restart: always
@@ -93,8 +92,6 @@ services:
     depends_on:
       - celery
       - redis
-
- 
 
 volumes:
   persistent: null
