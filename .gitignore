@@ -1,3 +1,4 @@
+docker-compose.yml
 .vscode/
 .idea/
 *.pyc
@@ -164,3 +165,4 @@ cython_debug/
 djangotesting/__pycache__/settings.cpython-36.pyc
 
 deploy.sh
+

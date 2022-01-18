@@ -41,12 +41,12 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX ./nginx
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX
-  
+
   deploy:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy Adra App Digital Ocean
+      - name: Deploy Adra App Aws Ec2
         uses: appleboy/ssh-action@v0.1.2
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -56,9 +56,8 @@ jobs:
 
           script: |
             cd /home/ubuntu/django-on-docker
-            echo 'Deployment successful to digital ocean'
-
-
+            bash ./deploy.sh
+            echo 'Deployment successful to aws'
 
 # name: Push images to Dockerhub and deploy on ELastic Beanstalk
 # #EVENT
