@@ -41,9 +41,7 @@ jobs:
         run: |
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX ./nginx
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG_NGINX
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
+
       - name: Deploy Adra App Digital Ocean
         uses: appleboy/ssh-action@v0.1.2
         with:
@@ -55,6 +53,11 @@ jobs:
           script: |
             cd /home/ubuntu/django-on-docker
             echo 'Deployment successful to digital ocean'
+  
+  # deploy:
+  #   runs-on: ubuntu-latest
+  #   steps:
+      
 
 
 
