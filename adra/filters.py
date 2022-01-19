@@ -6,6 +6,4 @@ class AlimentosFilters(django_filters.FilterSet):
     class Meta:
         model = Alimentos
         # fields = ['fecha_recogida']
-        fields = {
-            'created_at': ['year', 'month', 'day']
-        }
+        fields = {"created_at": ["year", "month", "day"]}
