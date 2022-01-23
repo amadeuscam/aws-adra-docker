@@ -23,7 +23,7 @@ class AlimentosFrom(ModelForm):
             "fecha_recogida",
         )
         widgets = {
-            "fecha_recogida": DateInput(attrs={"type": "date"}),
+            "fecha_recogida": DateInput(attrs={"type": "datetime-local"}),
         }
 
 
@@ -43,7 +43,7 @@ class PersonaForm(ModelForm):
             "mensaje",
             "sexo",
             "discapacidad",
-            "domingo",
+            "categoria",
             "empadronamiento",
             "libro_familia",
             "fotocopia_dni",
@@ -54,11 +54,44 @@ class PersonaForm(ModelForm):
             "recibos",
             "email",
             "covid",
+            "otros_documentos",
         ]
         widgets = {
-            "fecha_nacimiento": DateInput(attrs={"type": "date"}),
+            "fecha_nacimiento": forms.DateInput(
+                format=("%Y-%m-%d"),
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Select Date",
+                    "type": "date",
+                },
+            ),
+            # "fecha_nacimiento": DateInput(attrs={"type": "date"}),
             "email": EmailInput(attrs={"type": "email"}),
         }
+
+    def clean(self):
+
+        super().clean()
+
+        otros_documentos = self.cleaned_data.get("otros_documentos")
+        dni = self.cleaned_data.get("dni")
+
+        if not otros_documentos and not dni:
+            self._errors["otros_documentos"] = self.error_class(
+                ["Este campo es necesario"]
+            )
+            self._errors["dni"] = self.error_class(["Este campo es necesario"])
+
+        if otros_documentos and dni:
+            self._errors["otros_documentos"] = self.error_class(
+                ["Solo debe haber un campo para la identificación"]
+            )
+            self._errors["dni"] = self.error_class(
+                ["Solo debe haber un campo para la identificación"]
+            )
+
+        # return any errors if found
+        return self.cleaned_data
 
 
 class HijoForm(ModelForm):
@@ -68,11 +101,43 @@ class HijoForm(ModelForm):
             "parentesco",
             "nombre_apellido",
             "dni",
+            "otros_documentos",
             "fecha_nacimiento",
         ]
         widgets = {
-            "fecha_nacimiento": DateInput(attrs={"type": "date"}),
+            "fecha_nacimiento": forms.DateInput(
+                format=("%Y-%m-%d"),
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Select Date",
+                    "type": "date",
+                },
+            ),
         }
+
+    def clean(self):
+
+        super().clean()
+
+        otros_documentos = self.cleaned_data.get("otros_documentos")
+        dni = self.cleaned_data.get("dni")
+
+        if not otros_documentos and not dni:
+            self._errors["otros_documentos"] = self.error_class(
+                ["Este campo es necesario"]
+            )
+            self._errors["dni"] = self.error_class(["Este campo es necesario"])
+
+        if otros_documentos and dni:
+            self._errors["otros_documentos"] = self.error_class(
+                ["Solo debe haber un campo para la identificación"]
+            )
+            self._errors["dni"] = self.error_class(
+                ["Solo debe haber un campo para la identificación"]
+            )
+
+        # return any errors if found
+        return self.cleaned_data
 
 
 class UserEditForm(ModelForm):

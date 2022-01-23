@@ -26,7 +26,7 @@ class HijoAdmin(admin.ModelAdmin):
 class PersonaAdmin(admin.ModelAdmin):
     inlines = [HijoInline]
     list_filter = (
-        "domingo",
+        "categoria",
         "covid",
     )
     search_fields = (

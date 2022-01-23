@@ -483,7 +483,13 @@
                                             {{ hijo.nombre_apellido }}</h2>
                                         <p class="card-text  ">Parentesco:<span
                                                 class="text-warning">{{ hijo.parentesco|upper }}</span></p>
-                                        <p class="card-text">Dni: {{ hijo.dni|capfirst }}</p>
+                                        <p class="card-text">Dni:
+                                            {% if hijo.dni %}
+                                                {{ hijo.dni }}
+                                            {% else %}
+                                                {{ hijo.otros_documentos }}
+                                            {% endif %} 
+                                        </p>
                                         <p class="card-text">Sexo: {{ hijo.sexo }}</p>
                                         <p class="card-text">Edad: {{ hijo.age }}</p>
                                         <p class="card-text">Nacido: {{ hijo.fecha_nacimiento|date:"m-d-Y" }}</p>

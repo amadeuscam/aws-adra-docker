@@ -4,12 +4,32 @@ services:
     image: redis:alpine
     ports:
       - '6379:6379'
+
+  web:
+    container_name: adra_app
+    build:
+      context: .
+    volumes:
+      - .:/app
+      - static:/static
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py migrate --no-input &&
+            python manage.py runserver 0.0.0.0:8000"
+    # gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
+    env_file:
+      - ./.env
+    depends_on:
+      - db
+      - redis
+
   nginx:
     build: ./nginx
     ports:
       - 80:80
     volumes:
-      - static:/static/
+      - static:/static
     depends_on:
       - web
 
@@ -38,25 +58,6 @@ services:
       MYSQL_USER: $MYSQL_USER
       MYSQL_PASSWORD: $MYSQL_PASSWORD
       MYSQL_ROOT_PASSWORD: $MYSQL_PASSWORD
-
-  web:
-    container_name: adra_app
-    build:
-      context: .
-    volumes:
-      - .:/app
-      - static:/static/
-    ports:
-      - "8000:8000"
-    command: >
-      sh -c "python manage.py migrate --no-input &&
-            python manage.py runserver 0.0.0.0:8000"
-    # gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
-    env_file:
-      - ./.env
-    depends_on:
-      - db
-      - redis
 
   celery:
     restart: always
@@ -95,5 +96,5 @@ services:
       - redis
 
 volumes:
-  persistent: null
-  static: null
+  persistent: {}
+  static: {}

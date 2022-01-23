@@ -99,7 +99,7 @@ class PersonaSerializer(serializers.HyperlinkedModelSerializer):
             "empadronamiento",
             "libro_familia",
             "mensaje",
-            "domingo",
+            "categoria",
             "are_acte",
             "sexo",
             "discapacidad",

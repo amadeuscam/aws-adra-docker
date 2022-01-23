@@ -7,22 +7,22 @@ from django.urls import reverse
 
 
 class Persona(models.Model):
+
     SEXO = [("mujer", "Mujer"), ("hombre", "Hombre")]
     DOMINGO = [("1", "Domingo 2"), ("2", "Domingo 4")]
-    CIUDAD = [
-        ("Torrejon de ardoz", "Torrejon de ardoz"),
-    ]
+
     nombre_apellido = models.CharField(
-        max_length=100, verbose_name="Nombre del beneficiario"
+        max_length=100, verbose_name="Nombre del beneficiario", unique=True
     )
-    dni = models.CharField(max_length=20)
+    dni = models.CharField(max_length=20, blank=True)
+    otros_documentos = models.CharField(max_length=20, blank=True)
     fecha_nacimiento = models.DateField(auto_now_add=False)
     numero_adra = models.IntegerField(unique=True)
     nacionalidad = models.CharField(max_length=20)
     covid = models.BooleanField(default=False, verbose_name="Covid entregas")
     domicilio = models.TextField()
     are_acte = models.BooleanField(default=False, verbose_name="Tiene papeles")
-    ciudad = models.CharField(max_length=350, choices=CIUDAD)
+    ciudad = models.CharField(max_length=350)
     telefono = models.IntegerField()
     email = models.CharField(
         max_length=100,
@@ -43,7 +43,7 @@ class Persona(models.Model):
         choices=SEXO,
     )
     discapacidad = models.BooleanField(default=False)
-    domingo = models.CharField(max_length=30, choices=DOMINGO)
+    categoria = models.CharField(max_length=30, choices=DOMINGO)
     empadronamiento = models.BooleanField(
         default=False,
         verbose_name="Certificado de empadronamiento actualizado "
@@ -127,8 +127,11 @@ class Hijo(models.Model):
         choices=SEXO,
     )
     nombre_apellido = models.CharField(max_length=50)
-    dni = models.CharField(max_length=100, blank=True)
-    fecha_nacimiento = models.DateField(auto_now=False)
+    dni = models.CharField(max_length=50, blank=True)
+    otros_documentos = models.CharField(max_length=50, blank=True)
+    fecha_nacimiento = models.DateField(
+        auto_now=False, verbose_name="Formato fecha-> dia/mes/año"
+    )
     edad = models.IntegerField(default=0, blank=False, null=False)
     active = models.BooleanField(default=True, verbose_name="Activo?")
     persona = models.ForeignKey(

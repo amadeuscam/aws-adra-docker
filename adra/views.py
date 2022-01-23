@@ -1,5 +1,4 @@
 import os
-import time
 from datetime import date
 import telegram
 from PyPDF2 import PdfFileReader, PdfFileWriter
@@ -33,7 +32,6 @@ from rest_framework import viewsets
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-from django.contrib.sites.models import Site
 from .filters import AlimentosFilters
 from .forms import (
     AlimentosFrom,
@@ -154,31 +152,8 @@ class PersonaCreateView(LoginRequiredMixin, CreateView):
 
 class PersonaUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     model = Persona
-    fields = [
-        "nombre_apellido",
-        "dni",
-        "fecha_nacimiento",
-        "numero_adra",
-        "nacionalidad",
-        "domicilio",
-        "are_acte",
-        "ciudad",
-        "telefono",
-        "mensaje",
-        "sexo",
-        "discapacidad",
-        "domingo",
-        "empadronamiento",
-        "libro_familia",
-        "fotocopia_dni",
-        "prestaciones",
-        "nomnia",
-        "cert_negativo",
-        "aquiler_hipoteca",
-        "recibos",
-        "email",
-        "covid",
-    ]
+    form_class = PersonaForm
+
     success_message = "Datele sau salvat cu success!!"
 
     def form_valid(self, form):
@@ -465,23 +440,16 @@ def adauga_hijo_persona(request, pk):
 
 class HijoUpdateView(LoginRequiredMixin, UpdateView):
     model = Hijo
-    fields = [
-        "parentesco",
-        "nombre_apellido",
-        "dni",
-        "fecha_nacimiento",
-        "edad",
-    ]
+    form_class = HijoForm
 
     def form_valid(self, form):
         form.instance.modificado_por = self.request.user
         return super().form_valid(form)
 
-    def test_func(self):
-        persona = self.get_object()
-        if self.request.user == persona.modificado_por:
-            return True
-        return
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["up"] = "update"
+        return context
 
 
 class HijoDeleteView(LoginRequiredMixin, DeleteView):
@@ -548,8 +516,6 @@ def statistics_persona(request):
         beneficiar = Persona.objects.prefetch_related("hijo").filter(
             active=True
         )
-
-    tic = time.perf_counter()
 
     lst_02_mujer = []
     lst_02_hombre = []
@@ -691,9 +657,6 @@ def statistics_persona(request):
         "nbar": "stat",
         "mod": mod,
     }
-    toc = time.perf_counter()
-    print(f"Load page in {toc - tic:0.4f} seconds")
-    print(Site.objects.get_current())
     return render(request, "statistics/index.html", data_statistics)
 
 
@@ -715,7 +678,6 @@ def telegram_messages(request):
             bot = telegram.Bot(token=str(os.getenv("TELEGRAM_TOKEN")))
             persona = None
 
-            print(bot.getUpdates())
             if dom == "todos":
                 persona = Persona.objects.filter(active=True).exclude(
                     covid=True
@@ -724,7 +686,8 @@ def telegram_messages(request):
                 persona = (
                     Persona.objects.filter(active=True)
                     .filter(
-                        Q(domingo=f"Domingo {int(dom)}") | Q(domingo=int(dom)),
+                        Q(categoria=f"Domingo {int(dom)}")
+                        | Q(categoria=int(dom)),
                         ciudad__icontains="Torrejon de ardoz",
                     )
                     .exclude(covid=True)
@@ -797,7 +760,7 @@ def export_users_csv(request):
             ben.nombre_apellido,
             1,
             ben.dni,
-            "",
+            ben.otros_documentos,
             ben.fecha_nacimiento.strftime("%d/%m/%Y"),
         ]
         # Assign the data for each cell of the row
@@ -814,7 +777,7 @@ def export_users_csv(request):
                 d.nombre_apellido,
                 "",
                 d.dni,
-                "",
+                d.otros_documentos,
                 d.fecha_nacimiento.strftime("%d/%m/%Y"),
             ]
             row_num += 1
@@ -937,7 +900,7 @@ def generar_hoja_entrega(request, pk):
         "NombreOAR": "ADRA TORREJON",
         "DireccioOAR": "C/ Primavera 15",
         "Nombre y apellidos del representante de la unidad familiar": f"{persona.nombre_apellido}",  # noqa
-        "DNINIEPasaporte 1": f"{persona.dni}",
+        "DNINIEPasaporte 1": f"{persona.dni if persona.dni else persona.otros_documentos}",  # noqa
         "Teléfono": f"{persona.telefono}",
         "Domicilio": f"{persona.domicilio}",
         "Localidad": f"{persona.ciudad}",
@@ -979,7 +942,7 @@ def generar_hoja_valoracion_social(request, pk):
         hijo_dict = {}
         hijo_dict["parentesco"] = f"{h.parentesco}"
         hijo_dict["nombre_apellido_hijo"] = f"{h.nombre_apellido}"
-        hijo_dict["dni_hijo"] = f"{h.dni}"
+        hijo_dict["dni_hijo"] = f"{h.dni if h.dni else h.otros_documentos}"
         hijo_dict[
             "fecha_nacimiento_hijo"
         ] = f"{'{:%d-%m-%Y}'.format(h.fecha_nacimiento)}"
@@ -987,7 +950,7 @@ def generar_hoja_valoracion_social(request, pk):
     document.merge(
         numar_adra=f"{persona.numero_adra}",
         nombre_apellido=f"{persona.nombre_apellido}",
-        dni=f"{persona.dni}",
+        dni=f"{persona.dni if persona.dni else persona.otros_documentos }",
         fecha_nacimiento=f"{'{:%d-%m-%Y}'.format(persona.fecha_nacimiento)}",
         nacionalidad=f"{persona.nacionalidad}",
         domicilio=f"{persona.domicilio}",
