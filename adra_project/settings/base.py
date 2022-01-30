@@ -188,12 +188,6 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
 
 
-sentry_sdk.init(
-    dsn=f"{os.environ.get('SENTRY_SDK_URL')}",
-    integrations=[DjangoIntegration()],
-)
-
-
 CELERY_BROKER_URL = str(os.getenv("REDIS_URL"))
 CELERY_USER = str(os.getenv("CELERY_USER"))
 CELERY_USER_PASSWORD = str(os.getenv("CELERY_PASSWORD"))
