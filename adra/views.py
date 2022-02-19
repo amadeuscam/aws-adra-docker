@@ -1,8 +1,19 @@
 import os
+import io
+from django.utils.encoding import iri_to_uri
+import base64
 from datetime import date
 import telegram
 from PyPDF2 import PdfFileReader, PdfFileWriter
-from PyPDF2.generic import BooleanObject, NameObject, IndirectObject
+from PyPDF2.generic import (
+    BooleanObject,
+    NameObject,
+    IndirectObject,
+    NumberObject,
+    DictionaryObject,
+    ArrayObject,
+    createStringObject,
+)
 from allauth.account.adapter import DefaultAccountAdapter
 from django.conf import settings
 from django.contrib import messages
@@ -46,6 +57,8 @@ from .serializers import (
     AlacenAlimentosSerializer,
     UserSerializer,
 )
+from jsignature.utils import draw_signature
+from PIL import Image, ImageDraw
 
 
 def anuncios(request):
@@ -180,6 +193,10 @@ def adauga_alimentos_persona(request, pk):
         a_form = AlimentosFrom(request.POST)
         if a_form.is_valid():
             alimentos = a_form.save(commit=False)
+            signature = a_form.cleaned_data.get("signature")
+            if signature:
+                # as an image
+                signature_picture = draw_signature(signature)
 
             almacen.alimento_1 -= alimentos.alimento_1
             almacen.alimento_2 -= alimentos.alimento_2
@@ -224,6 +241,7 @@ class PersonaAlimentosUpdateView(LoginRequiredMixin, UpdateView):
         "alimento_11",
         "alimento_12",
         "fecha_recogida",
+        "signature",
     ]
 
     def form_valid(self, form):
@@ -863,6 +881,17 @@ def set_need_appearances_writer(writer):
         return writer
 
 
+def signature_base64(value):
+    if value is None or not isinstance(value, str):
+        return ""
+    in_mem_file = io.BytesIO()
+    draw_signature(value).save(in_mem_file, format="PNG")
+    in_mem_file.seek(0)
+    return "data:image/png;base64,{}".format(
+        iri_to_uri(base64.b64encode(in_mem_file.read()).decode("utf8"))
+    )
+
+
 def generar_hoja_entrega(request, pk):
     """
     Generador de hoja de entrega para cada beneficiario en parte
@@ -870,24 +899,19 @@ def generar_hoja_entrega(request, pk):
     :param pk: id persona
     :return: pdf generado
     """
-    infile = os.path.join(os.path.abspath("source_files"), "2021_entrega.pdf")
+    infile = os.path.join(
+        os.path.abspath("source_files"), "2021_entrega_full.pdf"
+    )
     inputStream = open(infile, "rb")
     pdf_reader = PdfFileReader(inputStream, strict=False)
-    if "/AcroForm" in pdf_reader.trailer["/Root"]:
-        pdf_reader.trailer["/Root"]["/AcroForm"].update(
-            {NameObject("/NeedAppearances"): BooleanObject(True)}
-        )
-
     pdf_writer = PdfFileWriter()
+
     set_need_appearances_writer(pdf_writer)
-    if "/AcroForm" in pdf_writer._root_object:
-        pdf_writer._root_object["/AcroForm"].update(
-            {NameObject("/NeedAppearances"): BooleanObject(True)}
-        )
 
     persona = Persona.objects.get(id=pk)
     familiares = persona.hijo.all()
-
+    alimentos = persona.alimentos.all().order_by("fecha_recogida")
+    print(alimentos)
     mayores = 0
     menores = 0
     for f in familiares:
@@ -904,23 +928,59 @@ def generar_hoja_entrega(request, pk):
         "Teléfono": f"{persona.telefono}",
         "Domicilio": f"{persona.domicilio}",
         "Localidad": f"{persona.ciudad}",
+        "Localidad_alta": f"{persona.ciudad}",
         "CP": "28850",
         "TOTAL MIEMBROS UNIDAD FAMILIAR": f"{mayores + menores + 1}",
         "Niños 02 ambos inclusive": f"{menores}",
         "numarAdra": f"{persona.numero_adra}",
     }
+    for index, alimento in enumerate(alimentos, 1):
+        print(index)
+        print(alimento)
+        if alimento.signature:
+            draw_signature(alimento.signature).save(
+                os.path.join(os.path.abspath("source_files"), f"f_{index}.png")
+            )
+        dict_alimentos = {
+            f"arroz_{index}": alimento.alimento_1,
+            f"garbanzo_{index}": alimento.alimento_2,
+            f"atun_{index}": alimento.alimento_3,
+            f"pasta_{index}": alimento.alimento_4,
+            f"tomate_frito_{index}": alimento.alimento_5,
+            f"galletas_{index}": alimento.alimento_6,
+            f"macedonia_verdura_{index}": alimento.alimento_7,
+            f"cacao_{index}": alimento.alimento_8,
+            f"tarrito_pollo_{index}": alimento.alimento_9,
+            f"tarrito_fruta_{index}": alimento.alimento_10,
+            f"leche_{index}": alimento.alimento_11,
+            f"aceite_{index}": alimento.alimento_12,
+            f"dia_{index}": alimento.fecha_recogida.day,
+            f"mes_{index}": alimento.fecha_recogida.month,
+            f"ano_{index}": alimento.fecha_recogida.year,
+            # .buttonSetIcon('../windows-wpIYy2lZ04s-unsplash.jpg')
+            f"firma5_af_image": "../windows-wpIYy2lZ04s-unsplash.jpg",
+            # f"firma_alta_af_image": Image.open(
+            #     "windows-wpIYy2lZ04s-unsplash.jpg"
+            # )
+            # if alimento.signature
+            # else None,
+        }
+        field_dictionary.update(dict_alimentos)
 
+    print(field_dictionary)
     pdf_writer.addPage(pdf_reader.getPage(0))
-    pdf_writer.updatePageFormFieldValues(
-        pdf_writer.getPage(0), field_dictionary
-    )
+    page = pdf_writer.getPage(0)
+    pdf_writer.updatePageFormFieldValues(page, field_dictionary)
 
-    # outputStream = open(outfile, "wb")
-    # pdf_writer.write(outputStream)
+    # make read only the fields that are fill with data
+    for j in range(0, len(page["/Annots"])):
+        writer_annot = page["/Annots"][j].getObject()
+        for field in field_dictionary:
+            if writer_annot.get("/T") == field:
+                writer_annot.update({NameObject("/Ff"): NumberObject(1)})
+            # -----------------------------------------------------
+    # print(pdf_reader.getFields())
 
-    # outputStream.close()
-
-    # extractedPage = open(pdf_file_path, 'rb')
     response = HttpResponse(content_type="application/pdf")
     response[
         "Content-Disposition"

@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.core.validators import validate_email
 from django.db import models
 from django.urls import reverse
+from jsignature.fields import JSignatureField
 
 
 class Persona(models.Model):
@@ -212,6 +213,7 @@ class Alimentos(models.Model):
     persona = models.ForeignKey(
         Persona, on_delete=models.CASCADE, related_name="alimentos"
     )
+    signature = JSignatureField(default=None)
     fecha_recogida = models.DateTimeField(auto_now_add=False)
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
