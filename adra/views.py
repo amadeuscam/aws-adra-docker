@@ -4,7 +4,7 @@ from django.utils.encoding import iri_to_uri
 import base64
 from datetime import date
 import telegram
-from PyPDF2 import PdfFileReader, PdfFileWriter
+from PyPDF2 import PdfFileReader, PdfFileWriter, PdfFileMerger
 from PyPDF2.generic import (
     BooleanObject,
     NameObject,
@@ -59,6 +59,9 @@ from .serializers import (
 )
 from jsignature.utils import draw_signature
 from PIL import Image, ImageDraw
+from reportlab.pdfgen import canvas
+from django.utils import translation
+from django.utils.formats import date_format
 
 
 def anuncios(request):
@@ -881,29 +884,58 @@ def set_need_appearances_writer(writer):
         return writer
 
 
-def signature_base64(value):
-    if value is None or not isinstance(value, str):
-        return ""
-    in_mem_file = io.BytesIO()
-    draw_signature(value).save(in_mem_file, format="PNG")
-    in_mem_file.seek(0)
-    return "data:image/png;base64,{}".format(
-        iri_to_uri(base64.b64encode(in_mem_file.read()).decode("utf8"))
-    )
+def add_image_pdf(page, dict, index, alimento):
+    packet = io.BytesIO()
+    can = canvas.Canvas(packet)
+
+    if isinstance(index, str):
+        can.drawImage(
+            draw_signature(alimento.signature, as_file=True),
+            dict[f"firm_alta"]["x_start"],
+            dict[f"firm_alta"]["y_start"],
+            width=60,
+            preserveAspectRatio=True,
+            mask="auto",
+        )
+    else:
+        can.drawImage(
+            draw_signature(alimento.signature, as_file=True),
+            dict[f"firm_{index}"]["x_start"],
+            dict[f"firm_{index}"]["y_start"],
+            width=60,
+            preserveAspectRatio=True,
+            mask="auto",
+        )
+    can.showPage()
+    can.showPage()
+    can.showPage()
+    can.save()
+
+    # move to the beginning of the StringIO buffer
+    packet.seek(0)
+    new_pdf = PdfFileReader(packet)
+    page.mergePage(new_pdf.getPage(0))
 
 
-def generar_hoja_entrega(request, pk):
+def generar_hoja_entrega(request, pk, mode):
     """
     Generador de hoja de entrega para cada beneficiario en parte
     :param request:
     :param pk: id persona
     :return: pdf generado
     """
-    infile = os.path.join(
+    print(mode)
+
+    infile_1 = os.path.join(
         os.path.abspath("source_files"), "2021_entrega_full.pdf"
     )
-    inputStream = open(infile, "rb")
-    pdf_reader = PdfFileReader(inputStream, strict=False)
+    infile2 = os.path.join(
+        os.path.abspath("source_files"), "2021_entrega_full_page_2.pdf"
+    )
+    inputStream_1 = open(infile_1, "rb")
+    inputStream_2 = open(infile2, "rb")
+    pdf_reader = PdfFileReader(inputStream_1, strict=False)
+    pdf_reader_two = PdfFileReader(inputStream_2, strict=False)
     pdf_writer = PdfFileWriter()
 
     set_need_appearances_writer(pdf_writer)
@@ -911,9 +943,13 @@ def generar_hoja_entrega(request, pk):
     persona = Persona.objects.get(id=pk)
     familiares = persona.hijo.all()
     alimentos = persona.alimentos.all().order_by("fecha_recogida")
-    print(alimentos)
     mayores = 0
     menores = 0
+    pdf_writer.addPage(pdf_reader.getPage(0))
+    if alimentos.count() >= 8:
+        if mode == "con":
+            pdf_writer.addPage(pdf_reader_two.getPage(0))
+
     for f in familiares:
         if calculate_age(f.fecha_nacimiento) > 3:
             mayores += 1
@@ -934,60 +970,240 @@ def generar_hoja_entrega(request, pk):
         "Niños 02 ambos inclusive": f"{menores}",
         "numarAdra": f"{persona.numero_adra}",
     }
-    for index, alimento in enumerate(alimentos, 1):
-        print(index)
-        print(alimento)
-        if alimento.signature:
-            draw_signature(alimento.signature).save(
-                os.path.join(os.path.abspath("source_files"), f"f_{index}.png")
-            )
-        dict_alimentos = {
-            f"arroz_{index}": alimento.alimento_1,
-            f"garbanzo_{index}": alimento.alimento_2,
-            f"atun_{index}": alimento.alimento_3,
-            f"pasta_{index}": alimento.alimento_4,
-            f"tomate_frito_{index}": alimento.alimento_5,
-            f"galletas_{index}": alimento.alimento_6,
-            f"macedonia_verdura_{index}": alimento.alimento_7,
-            f"cacao_{index}": alimento.alimento_8,
-            f"tarrito_pollo_{index}": alimento.alimento_9,
-            f"tarrito_fruta_{index}": alimento.alimento_10,
-            f"leche_{index}": alimento.alimento_11,
-            f"aceite_{index}": alimento.alimento_12,
-            f"dia_{index}": alimento.fecha_recogida.day,
-            f"mes_{index}": alimento.fecha_recogida.month,
-            f"ano_{index}": alimento.fecha_recogida.year,
-            # .buttonSetIcon('../windows-wpIYy2lZ04s-unsplash.jpg')
-            f"firma5_af_image": "../windows-wpIYy2lZ04s-unsplash.jpg",
-            # f"firma_alta_af_image": Image.open(
-            #     "windows-wpIYy2lZ04s-unsplash.jpg"
-            # )
-            # if alimento.signature
-            # else None,
+
+    if mode == "sin":
+
+        pdf_writer.updatePageFormFieldValues(
+            pdf_writer.getPage(0), field_dictionary
+        )
+
+        # make read only the fields that are fill with data
+        for j in range(0, len(pdf_writer.getPage(0)["/Annots"])):
+            writer_annot = pdf_writer.getPage(0)["/Annots"][j].getObject()
+            for field in field_dictionary:
+                if writer_annot.get("/T") == field:
+                    writer_annot.update({NameObject("/Ff"): NumberObject(1)})
+
+        response = HttpResponse(content_type="application/pdf")
+        response[
+            "Content-Disposition"
+        ] = f'attachment;filename="{persona.numero_adra}.pdf"'
+        pdf_writer.write(response)
+        inputStream_1.close()
+        inputStream_2.close()
+        return response
+
+    else:
+
+        firma_alimentos = {
+            f"firm_1": {"x_start": 208, "y_start": 20},
+            f"firm_2": {"x_start": 270, "y_start": 20},
+            f"firm_3": {"x_start": 320, "y_start": 20},
+            f"firm_4": {"x_start": 378, "y_start": 20},
+            f"firm_5": {"x_start": 435, "y_start": 20},
+            f"firm_6": {"x_start": 490, "y_start": 20},
+            f"firm_7": {"x_start": 550, "y_start": 20},
+            # second page
+            f"firm_8": {"x_start": 208, "y_start": 20},
+            f"firm_9": {"x_start": 270, "y_start": 20},
+            f"firm_10": {"x_start": 320, "y_start": 20},
+            f"firm_11": {"x_start": 378, "y_start": 20},
+            f"firm_12": {"x_start": 435, "y_start": 20},
+            f"firm_13": {"x_start": 490, "y_start": 20},
+            f"firm_14": {"x_start": 550, "y_start": 20},
+            f"firm_alta": {"x_start": 680, "y_start": 20},
         }
+
+        meses = [
+            "Enero",
+            "Febrero",
+            "Marzo",
+            "Abril",
+            "Mayo",
+            "Junio",
+            "Julio",
+            "Agosto",
+            "Septiembre",
+            "Octubre",
+            "Noviembre",
+            "Diciembre",
+        ]
+
+        dict_alimentos = {"page_0": {}, "page_1": {}}
+
+        for index, alimento in enumerate(alimentos, 1):
+
+            if alimento.signature:
+                if index >= 8:
+                    if index == 8:
+                        add_image_pdf(
+                            pdf_writer.getPage(1),
+                            firma_alimentos,
+                            "firm_alta",
+                            alimento,
+                        )
+                        print("dia 8", alimento.fecha_recogida.day)
+                        dict_alimentos["page_1"].update(
+                            {
+                                "dia_alta_pag2": alimento.fecha_recogida.day,
+                                "mes_alta_pag2": meses[
+                                    alimento.fecha_recogida.month - 1
+                                ],
+                                "ano_alta_pag2": alimento.fecha_recogida.year,
+                            }
+                        )
+
+                    add_image_pdf(
+                        pdf_writer.getPage(1), firma_alimentos, index, alimento
+                    )
+
+                    dict_alimentos["page_1"].update(
+                        {
+                            f"arroz_{index}": alimento.alimento_1,
+                            f"garbanzo_{index}": alimento.alimento_2,
+                            f"atun_{index}": alimento.alimento_3,
+                            f"pasta_{index}": alimento.alimento_4,
+                            f"tomate_frito_{index}": alimento.alimento_5,
+                            f"galletas_{index}": alimento.alimento_6,
+                            f"macedonia_verdura_{index}": alimento.alimento_7,
+                            f"cacao_{index}": alimento.alimento_8,
+                            f"tarrito_pollo_{index}": alimento.alimento_9,
+                            f"tarrito_fruta_{index}": alimento.alimento_10,
+                            f"leche_{index}": alimento.alimento_11,
+                            f"aceite_{index}": alimento.alimento_12,
+                            f"dia_{index}": alimento.fecha_recogida.day,
+                            f"mes_{index}": alimento.fecha_recogida.month,
+                            f"ano_{index}": alimento.fecha_recogida.year,
+                        }
+                    )
+                else:
+                    if index == 1:
+                        add_image_pdf(
+                            pdf_writer.getPage(0),
+                            firma_alimentos,
+                            "firm_alta",
+                            alimento,
+                        )
+                        dict_alimentos["page_0"].update(
+                            {
+                                "dia_alta": alimento.fecha_recogida.day,
+                                "mes_alta": meses[
+                                    alimento.fecha_recogida.month - 1
+                                ],
+                                "ano_alta": alimento.fecha_recogida.year,
+                            }
+                        )
+                    add_image_pdf(
+                        pdf_writer.getPage(0), firma_alimentos, index, alimento
+                    )
+
+                    dict_alimentos["page_0"].update(
+                        {
+                            f"arroz_{index}": alimento.alimento_1,
+                            f"garbanzo_{index}": alimento.alimento_2,
+                            f"atun_{index}": alimento.alimento_3,
+                            f"pasta_{index}": alimento.alimento_4,
+                            f"tomate_frito_{index}": alimento.alimento_5,
+                            f"galletas_{index}": alimento.alimento_6,
+                            f"macedonia_verdura_{index}": alimento.alimento_7,
+                            f"cacao_{index}": alimento.alimento_8,
+                            f"tarrito_pollo_{index}": alimento.alimento_9,
+                            f"tarrito_fruta_{index}": alimento.alimento_10,
+                            f"leche_{index}": alimento.alimento_11,
+                            f"aceite_{index}": alimento.alimento_12,
+                            f"dia_{index}": alimento.fecha_recogida.day,
+                            f"mes_{index}": alimento.fecha_recogida.month,
+                            f"ano_{index}": alimento.fecha_recogida.year,
+                        }
+                    )
+            else:
+                if index == 1:
+                    dict_alimentos["page_0"].update(
+                        {
+                            "dia_alta": alimento.fecha_recogida.day,
+                            "mes_alta": meses[
+                                alimento.fecha_recogida.month - 1
+                            ],
+                            "ano_alta": alimento.fecha_recogida.year,
+                        }
+                    )
+                elif index == 8:
+                    dict_alimentos["page_1"].update(
+                        {
+                            "dia_alta_pag2": alimento.fecha_recogida.day,
+                            "mes_alta_pag_2": meses[
+                                alimento.fecha_recogida.month - 1
+                            ],
+                            "ano_alta_pag2": alimento.fecha_recogida.year,
+                        }
+                    )
+                dict_alimentos["page_0"].update(
+                    {
+                        f"arroz_{index}": alimento.alimento_1,
+                        f"garbanzo_{index}": alimento.alimento_2,
+                        f"atun_{index}": alimento.alimento_3,
+                        f"pasta_{index}": alimento.alimento_4,
+                        f"tomate_frito_{index}": alimento.alimento_5,
+                        f"galletas_{index}": alimento.alimento_6,
+                        f"macedonia_verdura_{index}": alimento.alimento_7,
+                        f"cacao_{index}": alimento.alimento_8,
+                        f"tarrito_pollo_{index}": alimento.alimento_9,
+                        f"tarrito_fruta_{index}": alimento.alimento_10,
+                        f"leche_{index}": alimento.alimento_11,
+                        f"aceite_{index}": alimento.alimento_12,
+                        f"dia_{index}": alimento.fecha_recogida.day,
+                        f"mes_{index}": alimento.fecha_recogida.month,
+                        f"ano_{index}": alimento.fecha_recogida.year,
+                    }
+                )
+                dict_alimentos["page_1"].update(
+                    {
+                        f"arroz_{index}": alimento.alimento_1,
+                        f"garbanzo_{index}": alimento.alimento_2,
+                        f"atun_{index}": alimento.alimento_3,
+                        f"pasta_{index}": alimento.alimento_4,
+                        f"tomate_frito_{index}": alimento.alimento_5,
+                        f"galletas_{index}": alimento.alimento_6,
+                        f"macedonia_verdura_{index}": alimento.alimento_7,
+                        f"cacao_{index}": alimento.alimento_8,
+                        f"tarrito_pollo_{index}": alimento.alimento_9,
+                        f"tarrito_fruta_{index}": alimento.alimento_10,
+                        f"leche_{index}": alimento.alimento_11,
+                        f"aceite_{index}": alimento.alimento_12,
+                        f"dia_{index}": alimento.fecha_recogida.day,
+                        f"mes_{index}": alimento.fecha_recogida.month,
+                        f"ano_{index}": alimento.fecha_recogida.year,
+                    }
+                )
         field_dictionary.update(dict_alimentos)
+        # print(field_dictionary)
 
-    print(field_dictionary)
-    pdf_writer.addPage(pdf_reader.getPage(0))
-    page = pdf_writer.getPage(0)
-    pdf_writer.updatePageFormFieldValues(page, field_dictionary)
+        for index in range(pdf_writer.getNumPages()):
+            pdf_writer.updatePageFormFieldValues(
+                pdf_writer.getPage(index), field_dictionary
+            )
+            pdf_writer.updatePageFormFieldValues(
+                pdf_writer.getPage(index), field_dictionary[f"page_{index}"]
+            )
+            pdf_writer.updatePageFormFieldValues(
+                pdf_writer.getPage(index), field_dictionary[f"page_{index}"]
+            )
 
-    # make read only the fields that are fill with data
-    for j in range(0, len(page["/Annots"])):
-        writer_annot = page["/Annots"][j].getObject()
-        for field in field_dictionary:
-            if writer_annot.get("/T") == field:
-                writer_annot.update({NameObject("/Ff"): NumberObject(1)})
-            # -----------------------------------------------------
-    # print(pdf_reader.getFields())
+        # make read only the fields that are fill with data
+        for j in range(0, len(pdf_writer.getPage(index)["/Annots"])):
+            writer_annot = pdf_writer.getPage(index)["/Annots"][j].getObject()
+            for field in field_dictionary:
+                if writer_annot.get("/T") == field:
+                    writer_annot.update({NameObject("/Ff"): NumberObject(1)})
 
-    response = HttpResponse(content_type="application/pdf")
-    response[
-        "Content-Disposition"
-    ] = f'attachment;filename="{persona.numero_adra}.pdf"'
-    pdf_writer.write(response)
-    inputStream.close()
-    return response
+        response = HttpResponse(content_type="application/pdf")
+        response[
+            "Content-Disposition"
+        ] = f'attachment;filename="{persona.numero_adra}.pdf"'
+        pdf_writer.write(response)
+        inputStream_1.close()
+        inputStream_2.close()
+        return response
 
 
 def generar_hoja_valoracion_social(request, pk):
