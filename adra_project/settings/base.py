@@ -21,6 +21,7 @@ TOKEN_KEY_USER = os.environ.get("Token_KEY_USER")
 INSTALLED_APPS = [
     # local
     "adra.apps.AdraConfig",
+    "jsignature",
     # default
     "django.contrib.admin",
     "django.contrib.auth",
@@ -133,7 +134,7 @@ ACCOUNT_UNIQUE_EMAIL = True
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
 # LANGUAGE_CODE = 'en-us'
-LANGUAGE_CODE = "es-eu"
+LANGUAGE_CODE = "es"
 
 TIME_ZONE = "Europe/Madrid"
 
@@ -231,3 +232,6 @@ LOGGING = {
 # SESSION_COOKIE_SECURE = True
 # CSRF_COOKIE_SECURE = True
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
+
+JSIGNATURE_WIDTH = '100%'
+JSIGNATURE_HEIGHT = 200
