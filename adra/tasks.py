@@ -64,7 +64,7 @@ def caducidad_alimentos(self) -> str:
     list_email = [e["email"] for e in users_data]
     # list_email_test = ["amadeuscam@yahoo.es"]
 
-    for number in range(1, 13):
+    for number in range(1, 14):
         if (
             check_caducidad(data_aliemntos[f"alimento_{number}_caducidad"])
             == 37

@@ -8,7 +8,6 @@ from jsignature.fields import JSignatureField
 
 
 class Persona(models.Model):
-
     SEXO = [("mujer", "Mujer"), ("hombre", "Hombre")]
     DOMINGO = [("1", "Domingo 2"), ("2", "Domingo 4")]
 
@@ -48,7 +47,7 @@ class Persona(models.Model):
     empadronamiento = models.BooleanField(
         default=False,
         verbose_name="Certificado de empadronamiento actualizado "
-        "con fecha de menos de tres meses ",
+                     "con fecha de menos de tres meses ",
     )
     libro_familia = models.BooleanField(
         default=False, verbose_name="Fotocopia del Libro de Familia "
@@ -56,12 +55,12 @@ class Persona(models.Model):
     fotocopia_dni = models.BooleanField(
         default=False,
         verbose_name="Fotocopia del DNI/NIE o pasaporte de todos los "
-        "miembros del núcleo familiar",
+                     "miembros del núcleo familiar",
     )
     prestaciones = models.BooleanField(
         default=False,
         verbose_name="Fotocopia de la documentación que acredite de"
-        " prestación, pensión, paro, etc",
+                     " prestación, pensión, paro, etc",
     )
     nomnia = models.BooleanField(
         default=False,
@@ -70,17 +69,17 @@ class Persona(models.Model):
     cert_negativo = models.BooleanField(
         default=False,
         verbose_name="En caso de no tener ingresos: certificado"
-        " negativo de rentas, de la Agencia Tributaria.",
+                     " negativo de rentas, de la Agencia Tributaria.",
     )
     aquiler_hipoteca = models.BooleanField(
         default=False,
         verbose_name="Ultimo recibo alquiler o  hipoteca de"
-        " vivienda familiar en la que están empadronados",
+                     " vivienda familiar en la que están empadronados",
     )
     recibos = models.BooleanField(
         default=False,
         verbose_name="Recibo de gastos básicos: luz, agua, gas, "
-        "calefacción, comunidad y  comedor escolar.",
+                     "calefacción, comunidad y  comedor escolar.",
     )
 
     class Meta:
@@ -98,12 +97,12 @@ class Persona(models.Model):
     def age(self):
         today = date.today()
         return (
-            today.year
-            - self.fecha_nacimiento.year
-            - (
-                (today.month, today.day)
-                < (self.fecha_nacimiento.month, self.fecha_nacimiento.day)
-            )
+                today.year
+                - self.fecha_nacimiento.year
+                - (
+                        (today.month, today.day)
+                        < (self.fecha_nacimiento.month, self.fecha_nacimiento.day)
+                )
         )
 
 
@@ -164,25 +163,26 @@ class Hijo(models.Model):
     def age(self):
         today = date.today()
         return (
-            today.year
-            - self.fecha_nacimiento.year
-            - (
-                (today.month, today.day)
-                < (self.fecha_nacimiento.month, self.fecha_nacimiento.day)
-            )
+                today.year
+                - self.fecha_nacimiento.year
+                - (
+                        (today.month, today.day)
+                        < (self.fecha_nacimiento.month, self.fecha_nacimiento.day)
+                )
         )
 
 
 class Alimentos(models.Model):
     alimento_1 = models.IntegerField(default=None, verbose_name="Arroz Blanco")
+
     alimento_2 = models.IntegerField(
-        default=None, verbose_name="Garbanzos cocidos"
+        default=None, verbose_name="Alubia cocida"
     )
     alimento_3 = models.IntegerField(
         default=None, verbose_name="Conserva de atún"
     )
     alimento_4 = models.IntegerField(
-        default=None, verbose_name="Pasta alimenticia tipo espagueti"
+        default=None, verbose_name="Pasta alimenticia tipo macarron"
     )
     alimento_5 = models.IntegerField(
         default=None, verbose_name="Tomate frito en conserva"
@@ -192,18 +192,21 @@ class Alimentos(models.Model):
         default=None, verbose_name="Macedonia de verduras en conserva"
     )
     alimento_8 = models.IntegerField(
-        default=None, verbose_name="Cacao soluble"
+        default=None, verbose_name="Fruta en conserva"
     )
     alimento_9 = models.IntegerField(
-        default=None, verbose_name="Tarritos infantiles con pollo"
+        default=None, verbose_name="Cacao soluble"
     )
     alimento_10 = models.IntegerField(
-        default=None, verbose_name="Tarritos infantiles de fruta"
+        default=None, verbose_name="Tarritos infantiles con pollo"
     )
     alimento_11 = models.IntegerField(
-        default=None, verbose_name="Leche entera UHT"
+        default=None, verbose_name="Tarritos infantiles de fruta"
     )
     alimento_12 = models.IntegerField(
+        default=None, verbose_name="Leche entera UHT"
+    )
+    alimento_13 = models.IntegerField(
         default=None, verbose_name="Aceite de oliva"
     )
 
@@ -213,7 +216,7 @@ class Alimentos(models.Model):
     persona = models.ForeignKey(
         Persona, on_delete=models.CASCADE, related_name="alimentos"
     )
-    signature = JSignatureField(default=None)
+    signature = JSignatureField(default=None, blank=True, null=True)
     fecha_recogida = models.DateTimeField(auto_now_add=False)
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now_add=True)
@@ -228,41 +231,42 @@ class Alimentos(models.Model):
 
 
 class AlmacenAlimentos(models.Model):
-    alimento_1 = models.IntegerField(
-        blank=True, null=True, verbose_name="Arroz Blanco"
-    )
+    alimento_1 = models.IntegerField(default=None, verbose_name="Arroz Blanco")
+
     alimento_2 = models.IntegerField(
-        blank=True, null=True, verbose_name="Garbanzos cocidos"
+        default=None, verbose_name="Alubia cocida"
     )
     alimento_3 = models.IntegerField(
-        blank=True, null=True, verbose_name="Conserva de atún"
+        default=None, verbose_name="Conserva de atún"
     )
     alimento_4 = models.IntegerField(
-        blank=True, null=True, verbose_name="Pasta alimenticia tipo espagueti"
+        default=None, verbose_name="Pasta alimenticia tipo macarron"
     )
     alimento_5 = models.IntegerField(
-        blank=True, null=True, verbose_name="Tomate frito en conserva"
+        default=None, verbose_name="Tomate frito en conserva"
     )
-    alimento_6 = models.IntegerField(
-        blank=True, null=True, verbose_name="Galletas"
-    )
+    alimento_6 = models.IntegerField(default=None, verbose_name="Galletas")
+
     alimento_7 = models.IntegerField(
-        blank=True, null=True, verbose_name="Macedonia de verduras en conserva"
+        default=None, verbose_name="Macedonia de verduras en conserva"
     )
     alimento_8 = models.IntegerField(
-        blank=True, null=True, verbose_name="Cacao soluble"
+        default=None, verbose_name="Fruta en conserva"
     )
     alimento_9 = models.IntegerField(
-        blank=True, null=True, verbose_name="Tarritos infantiles con pollo"
+        default=None, verbose_name="Cacao soluble"
     )
     alimento_10 = models.IntegerField(
-        blank=True, null=True, verbose_name="Tarritos infantiles de fruta"
+        default=None, verbose_name="Tarritos infantiles con pollo"
     )
     alimento_11 = models.IntegerField(
-        blank=True, null=True, verbose_name="Leche entera UHT"
+        default=None, verbose_name="Tarritos infantiles de fruta"
     )
     alimento_12 = models.IntegerField(
-        blank=True, null=True, verbose_name="Aceite de oliva"
+        default=None, verbose_name="Leche entera UHT"
+    )
+    alimento_13 = models.IntegerField(
+        default=None, verbose_name="Aceite de oliva"
     )
 
     modificado_por = models.ForeignKey(
@@ -281,7 +285,7 @@ class AlmacenAlimentos(models.Model):
         auto_now_add=False,
         blank=True,
         default=None,
-        verbose_name="Garbanzos cocidos",
+        verbose_name="Alubia cocida",
     )
     alimento_3_caducidad = models.DateField(
         auto_now_add=False,
@@ -293,7 +297,7 @@ class AlmacenAlimentos(models.Model):
         auto_now_add=False,
         blank=True,
         default=None,
-        verbose_name="Pasta alimenticia tipo espagueti",
+        verbose_name="Pasta alimenticia tipo macarron",
     )
     alimento_5_caducidad = models.DateField(
         auto_now_add=False,
@@ -314,27 +318,33 @@ class AlmacenAlimentos(models.Model):
         auto_now_add=False,
         blank=True,
         default=None,
-        verbose_name="Cacao soluble",
+        verbose_name="Fruta en conserva",
     )
     alimento_9_caducidad = models.DateField(
         auto_now_add=False,
         blank=True,
         default=None,
-        verbose_name="Tarritos infantiles con pollo",
+        verbose_name="Cacao soluble",
     )
     alimento_10_caducidad = models.DateField(
         auto_now_add=False,
         blank=True,
         default=None,
-        verbose_name="Tarritos infantiles de fruta",
+        verbose_name="Tarritos infantiles con pollo",
     )
     alimento_11_caducidad = models.DateField(
         auto_now_add=False,
         blank=True,
         default=None,
-        verbose_name="Leche entera UHT",
+        verbose_name="Tarritos infantiles de fruta",
     )
     alimento_12_caducidad = models.DateField(
+        auto_now_add=False,
+        blank=True,
+        default=None,
+        verbose_name="Leche entera UHT",
+    )
+    alimento_13_caducidad = models.DateField(
         auto_now_add=False,
         blank=True,
         default=None,

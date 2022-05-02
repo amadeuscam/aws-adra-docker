@@ -6,15 +6,16 @@ import sentry_sdk
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
-
+# os.environ.setdefault("DJANGO_SETTINGS_MODULE", "adra_project.settings.dev")
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get("SECRET_KEY")
+# SECRET_KEY = os.getenv("SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # django-allauth config
 SITE_ID = 1
 SESSION_COOKIE_AGE = 86400
 
-TOKEN_KEY_USER = os.environ.get("Token_KEY_USER")
+TOKEN_KEY_USER = os.getenv("Token_KEY_USER")
 # Application definition
 
 

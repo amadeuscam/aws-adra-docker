@@ -1,6 +1,7 @@
 amqp==5.0.6
 APScheduler==3.6.3
 asgiref==3.3.4
+atomicwrites==1.4.0
 attrs==21.2.0
 autopep8==1.5.7
 billiard==3.6.4.0
@@ -63,7 +64,7 @@ kombu==5.1.0
 lxml==4.6.5
 mccabe==0.6.1
 mypy-extensions==0.4.3
-mysqlclient==2.0.3
+mysql-connector==2.2.9
 oauthlib==3.1.1
 openpyxl==3.0.7
 ordered-set==4.0.2
@@ -82,6 +83,7 @@ pycparser==2.20
 pyflakes==2.3.1
 Pygments==2.9.0
 PyJWT==2.3.0
+PyMySQL==1.0.2
 pyparsing==2.4.7
 PyPDF2==1.26.0
 Pyphen==0.10.0

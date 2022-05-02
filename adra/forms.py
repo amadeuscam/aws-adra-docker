@@ -24,6 +24,7 @@ class AlimentosFrom(ModelForm):
             "alimento_10",
             "alimento_11",
             "alimento_12",
+            "alimento_13",
             "fecha_recogida",
             "signature",
         )

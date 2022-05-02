@@ -34,7 +34,7 @@ class Command(BaseCommand):
             today = date.today()
             return today.year - age.year - ((today.month, today.day) < (age.month, age.day))
 
-        infile = os.path.join(os.path.abspath('source_files'), '2021_entrega.pdf')
+        infile = os.path.join(os.path.abspath('source_files'), '2022_entrega_full.pdf')
         inputStream = open(infile, "rb")
         pdf_reader = PdfFileReader(inputStream, strict=False)
         if "/AcroForm" in pdf_reader.trailer["/Root"]:
@@ -67,8 +67,8 @@ class Command(BaseCommand):
                 print(mayores)
                 print(menores)
                 field_dictionary = {
-                    "NombreOAR": "ADRA TORREJON",
-                    "DireccioOAR": "C/ Primavera 15",
+                    "NomOAR": "ADRA TORREJON",
+                    "DirOAR": "C/ Primavera 15",
                     "Nombre y apellidos del representante de la unidad familiar": f"{persona.nombre_apellido}",
                     "DNINIEPasaporte 1": f"{persona.dni}",
                     "Teléfono": f"{persona.telefono}",

@@ -213,6 +213,7 @@ def adauga_alimentos_persona(request, pk):
             almacen.alimento_10 -= alimentos.alimento_10
             almacen.alimento_11 -= alimentos.alimento_11
             almacen.alimento_12 -= alimentos.alimento_12
+            almacen.alimento_13 -= alimentos.alimento_13
 
             alimentos.persona = persona
             alimentos.modificado_por = request.user
@@ -243,6 +244,7 @@ class PersonaAlimentosUpdateView(LoginRequiredMixin, UpdateView):
         "alimento_10",
         "alimento_11",
         "alimento_12",
+        "alimento_13",
         "fecha_recogida",
         "signature",
     ]
@@ -407,6 +409,19 @@ class PersonaAlimentosUpdateView(LoginRequiredMixin, UpdateView):
                 )
                 almacen.alimento_12 += restante
 
+        if "alimento_13" in clean:
+            valor_anterior_alimento_13 = form.initial["alimento_13"]
+            if form.instance.alimento_13 > valor_anterior_alimento_13:
+                restante = abs(
+                    form.instance.alimento_13 - valor_anterior_alimento_13
+                )
+                almacen.alimento_13 -= restante
+            else:
+                restante = abs(
+                    form.instance.alimento_13 - valor_anterior_alimento_13
+                )
+                almacen.alimento_13 += restante
+
         almacen.save()
         form.instance.modificado_por = self.request.user
         return super().form_valid(form)
@@ -514,9 +529,9 @@ def buscar(request):
 def calculate_age(age):
     today = date.today()
     return (
-        today.year
-        - age.year
-        - ((today.month, today.day) < (age.month, age.day))
+            today.year
+            - age.year
+            - ((today.month, today.day) < (age.month, age.day))
     )
 
 
@@ -530,8 +545,8 @@ def statistics_persona(request):
     if int(mod) == 1:
         beneficiar = (
             Persona.objects.prefetch_related("hijo")
-            .filter(active=True)
-            .exclude(covid=True)
+                .filter(active=True)
+                .exclude(covid=True)
         )
     else:
         beneficiar = Persona.objects.prefetch_related("hijo").filter(
@@ -647,29 +662,29 @@ def statistics_persona(request):
         "total_per_mujer_16": len(lst_16_64_mujer),
         "total_per_mujer_65": len(lst_64_mujer),
         "total_mujeres": len(lst_02_mujer)
-        + len(lst_3_15_mujer)
-        + len(lst_16_64_mujer)
-        + len(lst_64_mujer),
+                         + len(lst_3_15_mujer)
+                         + len(lst_16_64_mujer)
+                         + len(lst_64_mujer),
         "total_per_hombre_02": len(lst_02_hombre),
         "total_per_hombre_03": len(lst_3_15_hombre),
         "total_per_hombre_16": len(lst_16_64_hombre),
         "total_per_hombre_65": len(lst_64_hombre),
         "total_hombres": len(lst_02_hombre)
-        + len(lst_3_15_hombre)
-        + len(lst_16_64_hombre)
-        + len(lst_64_hombre),
+                         + len(lst_3_15_hombre)
+                         + len(lst_16_64_hombre)
+                         + len(lst_64_hombre),
         "total_02": len(lst_02_mujer) + len(lst_02_hombre),
         "total_03": len(lst_3_15_mujer) + len(lst_3_15_hombre),
         "total_16": len(lst_16_64_mujer) + len(lst_16_64_hombre),
         "total_65": len(lst_64_mujer) + len(lst_64_hombre),
         "total_personas": len(lst_02_mujer)
-        + len(lst_02_hombre)
-        + len(lst_3_15_mujer)
-        + len(lst_3_15_hombre)
-        + len(lst_16_64_mujer)
-        + len(lst_16_64_hombre)
-        + len(lst_64_mujer)
-        + len(lst_64_hombre),
+                          + len(lst_02_hombre)
+                          + len(lst_3_15_mujer)
+                          + len(lst_3_15_hombre)
+                          + len(lst_16_64_mujer)
+                          + len(lst_16_64_hombre)
+                          + len(lst_64_mujer)
+                          + len(lst_64_hombre),
         "discapacidad": Persona.objects.filter(
             discapacidad=True, active=True
         ).count(),
@@ -706,12 +721,12 @@ def telegram_messages(request):
             else:
                 persona = (
                     Persona.objects.filter(active=True)
-                    .filter(
+                        .filter(
                         Q(categoria=f"Domingo {int(dom)}")
                         | Q(categoria=int(dom)),
                         ciudad__icontains="Torrejon de ardoz",
                     )
-                    .exclude(covid=True)
+                        .exclude(covid=True)
                 )
 
             per_list = [p.nombre_apellido for p in persona]
@@ -832,6 +847,7 @@ def buscar_fecha(request):
     alimento_10 = user_filter.qs.aggregate(Sum("alimento_10"))
     alimento_11 = user_filter.qs.aggregate(Sum("alimento_11"))
     alimento_12 = user_filter.qs.aggregate(Sum("alimento_12"))
+    alimento_13 = user_filter.qs.aggregate(Sum("alimento_13"))
 
     return render(
         request,
@@ -850,6 +866,7 @@ def buscar_fecha(request):
             "alimento_10": alimento_10,
             "alimento_11": alimento_11,
             "alimento_12": alimento_12,
+            "alimento_13": alimento_13,
             "nbar": "buscar_av",
         },
     )
@@ -927,7 +944,7 @@ def generar_hoja_entrega(request, pk, mode):
     print(mode)
 
     infile_1 = os.path.join(
-        os.path.abspath("source_files"), "2021_entrega_full.pdf"
+        os.path.abspath("source_files"), "2022_entrega_full.pdf"
     )
     infile2 = os.path.join(
         os.path.abspath("source_files"), "2021_entrega_full_page_2.pdf"
@@ -957,8 +974,8 @@ def generar_hoja_entrega(request, pk, mode):
             menores += 1
 
     field_dictionary = {
-        "NombreOAR": "ADRA TORREJON",
-        "DireccioOAR": "C/ Primavera 15",
+        "NomOAR": "ADRA TORREJON",
+        "DirOAR": "C/ Primavera 15",
         "Nombre y apellidos del representante de la unidad familiar": f"{persona.nombre_apellido}",  # noqa
         "DNINIEPasaporte 1": f"{persona.dni if persona.dni else persona.otros_documentos}",  # noqa
         "Teléfono": f"{persona.telefono}",
@@ -996,22 +1013,22 @@ def generar_hoja_entrega(request, pk, mode):
     else:
 
         firma_alimentos = {
-            f"firm_1": {"x_start": 208, "y_start": 20},
-            f"firm_2": {"x_start": 270, "y_start": 20},
-            f"firm_3": {"x_start": 320, "y_start": 20},
-            f"firm_4": {"x_start": 378, "y_start": 20},
-            f"firm_5": {"x_start": 435, "y_start": 20},
-            f"firm_6": {"x_start": 490, "y_start": 20},
-            f"firm_7": {"x_start": 550, "y_start": 20},
+            f"firm_1": {"x_start": 208, "y_start": 15},
+            f"firm_2": {"x_start": 270, "y_start": 15},
+            f"firm_3": {"x_start": 320, "y_start": 15},
+            f"firm_4": {"x_start": 378, "y_start": 15},
+            f"firm_5": {"x_start": 435, "y_start": 15},
+            f"firm_6": {"x_start": 490, "y_start": 15},
+            f"firm_7": {"x_start": 550, "y_start": 15},
             # second page
-            f"firm_8": {"x_start": 208, "y_start": 20},
-            f"firm_9": {"x_start": 270, "y_start": 20},
-            f"firm_10": {"x_start": 320, "y_start": 20},
-            f"firm_11": {"x_start": 378, "y_start": 20},
-            f"firm_12": {"x_start": 435, "y_start": 20},
-            f"firm_13": {"x_start": 490, "y_start": 20},
-            f"firm_14": {"x_start": 550, "y_start": 20},
-            f"firm_alta": {"x_start": 680, "y_start": 20},
+            f"firm_8": {"x_start": 208, "y_start": 15},
+            f"firm_9": {"x_start": 270, "y_start": 15},
+            f"firm_10": {"x_start": 320, "y_start": 15},
+            f"firm_11": {"x_start": 378, "y_start": 15},
+            f"firm_12": {"x_start": 435, "y_start": 15},
+            f"firm_13": {"x_start": 490, "y_start": 15},
+            f"firm_14": {"x_start": 550, "y_start": 15},
+            f"firm_alta": {"x_start": 676, "y_start": 55},
         }
 
         meses = [
@@ -1032,7 +1049,7 @@ def generar_hoja_entrega(request, pk, mode):
         dict_alimentos = {"page_0": {}, "page_1": {}}
 
         for index, alimento in enumerate(alimentos, 1):
-
+            print(index)
             if alimento.signature:
                 if index >= 8:
                     if index == 8:
@@ -1048,7 +1065,7 @@ def generar_hoja_entrega(request, pk, mode):
                                 "dia_alta_pag2": alimento.fecha_recogida.day,
                                 "mes_alta_pag2": meses[
                                     alimento.fecha_recogida.month - 1
-                                ],
+                                    ],
                                 "ano_alta_pag2": alimento.fecha_recogida.year,
                             }
                         )
@@ -1059,18 +1076,19 @@ def generar_hoja_entrega(request, pk, mode):
 
                     dict_alimentos["page_1"].update(
                         {
-                            f"arroz_{index}": alimento.alimento_1,
-                            f"garbanzo_{index}": alimento.alimento_2,
-                            f"atun_{index}": alimento.alimento_3,
-                            f"pasta_{index}": alimento.alimento_4,
-                            f"tomate_frito_{index}": alimento.alimento_5,
-                            f"galletas_{index}": alimento.alimento_6,
-                            f"macedonia_verdura_{index}": alimento.alimento_7,
-                            f"cacao_{index}": alimento.alimento_8,
-                            f"tarrito_pollo_{index}": alimento.alimento_9,
-                            f"tarrito_fruta_{index}": alimento.alimento_10,
-                            f"leche_{index}": alimento.alimento_11,
-                            f"aceite_{index}": alimento.alimento_12,
+                            f"2022Arroz blanco_{index}": alimento.alimento_1,
+                            f"2022Alubia cocida_{index}": alimento.alimento_2,
+                            f"2022Conserva de atún_{index}": alimento.alimento_3,
+                            f"2022Pasta alimenticia tipo macarrón_{index}": alimento.alimento_4,
+                            f"2022Tomate frito en conserva_{index}": alimento.alimento_5,
+                            f"2022Galletas_{index}": alimento.alimento_6,
+                            f"2022Macedonia de verduras en conserva_{index}": alimento.alimento_7,
+                            f"2022Fruta en conserva_{index}": alimento.alimento_8,
+                            f"2022Cacao soluble_{index}": alimento.alimento_9,
+                            f"2022Tarritos infantiles con pollo_{index}": alimento.alimento_10,
+                            f"2022Tarritos infantiles de fruta_{index}": alimento.alimento_11,
+                            f"2022Leche entera UHT_{index}": alimento.alimento_12,
+                            f"2022Aceite de oliva_{index}": alimento.alimento_13,
                             f"dia_{index}": alimento.fecha_recogida.day,
                             f"mes_{index}": alimento.fecha_recogida.month,
                             f"ano_{index}": alimento.fecha_recogida.year,
@@ -1089,7 +1107,7 @@ def generar_hoja_entrega(request, pk, mode):
                                 "dia_alta": alimento.fecha_recogida.day,
                                 "mes_alta": meses[
                                     alimento.fecha_recogida.month - 1
-                                ],
+                                    ],
                                 "ano_alta": alimento.fecha_recogida.year,
                             }
                         )
@@ -1099,21 +1117,22 @@ def generar_hoja_entrega(request, pk, mode):
 
                     dict_alimentos["page_0"].update(
                         {
-                            f"arroz_{index}": alimento.alimento_1,
-                            f"garbanzo_{index}": alimento.alimento_2,
-                            f"atun_{index}": alimento.alimento_3,
-                            f"pasta_{index}": alimento.alimento_4,
-                            f"tomate_frito_{index}": alimento.alimento_5,
-                            f"galletas_{index}": alimento.alimento_6,
-                            f"macedonia_verdura_{index}": alimento.alimento_7,
-                            f"cacao_{index}": alimento.alimento_8,
-                            f"tarrito_pollo_{index}": alimento.alimento_9,
-                            f"tarrito_fruta_{index}": alimento.alimento_10,
-                            f"leche_{index}": alimento.alimento_11,
-                            f"aceite_{index}": alimento.alimento_12,
+                            f"2022Arroz blanco_{index}": alimento.alimento_1,
+                            f"2022Alubia cocida_{index}": alimento.alimento_2,
+                            f"2022Conserva de atún_{index}": alimento.alimento_3,
+                            f"2022Pasta alimenticia tipo macarrón_{index}": alimento.alimento_4,
+                            f"2022Tomate frito en conserva_{index}": alimento.alimento_5,
+                            f"2022Galletas_{index}": alimento.alimento_6,
+                            f"2022Macedonia de verduras en conserva_{index}": alimento.alimento_7,
+                            f"2022Fruta en conserva_{index}": alimento.alimento_8,
+                            f"2022Cacao soluble_{index}": alimento.alimento_9,
+                            f"2022Tarritos infantiles con pollo_{index}": alimento.alimento_10,
+                            f"2022Tarritos infantiles de fruta_{index}": alimento.alimento_11,
+                            f"2022Leche entera UHT_{index}": alimento.alimento_12,
+                            f"2022Aceite de oliva_{index}": alimento.alimento_13,
                             f"dia_{index}": alimento.fecha_recogida.day,
                             f"mes_{index}": alimento.fecha_recogida.month,
-                            f"ano_{index}": alimento.fecha_recogida.year,
+                            f"ano_{index}": alimento.fecha_recogida.year
                         }
                     )
             else:
@@ -1123,7 +1142,7 @@ def generar_hoja_entrega(request, pk, mode):
                             "dia_alta": alimento.fecha_recogida.day,
                             "mes_alta": meses[
                                 alimento.fecha_recogida.month - 1
-                            ],
+                                ],
                             "ano_alta": alimento.fecha_recogida.year,
                         }
                     )
@@ -1133,24 +1152,25 @@ def generar_hoja_entrega(request, pk, mode):
                             "dia_alta_pag2": alimento.fecha_recogida.day,
                             "mes_alta_pag_2": meses[
                                 alimento.fecha_recogida.month - 1
-                            ],
+                                ],
                             "ano_alta_pag2": alimento.fecha_recogida.year,
                         }
                     )
                 dict_alimentos["page_0"].update(
                     {
-                        f"arroz_{index}": alimento.alimento_1,
-                        f"garbanzo_{index}": alimento.alimento_2,
-                        f"atun_{index}": alimento.alimento_3,
-                        f"pasta_{index}": alimento.alimento_4,
-                        f"tomate_frito_{index}": alimento.alimento_5,
-                        f"galletas_{index}": alimento.alimento_6,
-                        f"macedonia_verdura_{index}": alimento.alimento_7,
-                        f"cacao_{index}": alimento.alimento_8,
-                        f"tarrito_pollo_{index}": alimento.alimento_9,
-                        f"tarrito_fruta_{index}": alimento.alimento_10,
-                        f"leche_{index}": alimento.alimento_11,
-                        f"aceite_{index}": alimento.alimento_12,
+                        f"2022Arroz blanco_{index}": alimento.alimento_1,
+                        f"2022Alubia cocida_{index}": alimento.alimento_2,
+                        f"2022Conserva de atún_{index}": alimento.alimento_3,
+                        f"2022Pasta alimenticia tipo macarrón_{index}": alimento.alimento_4,
+                        f"2022Tomate frito en conserva_{index}": alimento.alimento_5,
+                        f"2022Galletas_{index}": alimento.alimento_6,
+                        f"2022Macedonia de verduras en conserva_{index}": alimento.alimento_7,
+                        f"2022Fruta en conserva_{index}": alimento.alimento_8,
+                        f"2022Cacao soluble_{index}": alimento.alimento_9,
+                        f"2022Tarritos infantiles con pollo_{index}": alimento.alimento_10,
+                        f"2022Tarritos infantiles de fruta_{index}": alimento.alimento_11,
+                        f"2022Leche entera UHT_{index}": alimento.alimento_12,
+                        f"2022Aceite de oliva_{index}": alimento.alimento_13,
                         f"dia_{index}": alimento.fecha_recogida.day,
                         f"mes_{index}": alimento.fecha_recogida.month,
                         f"ano_{index}": alimento.fecha_recogida.year,
@@ -1158,25 +1178,26 @@ def generar_hoja_entrega(request, pk, mode):
                 )
                 dict_alimentos["page_1"].update(
                     {
-                        f"arroz_{index}": alimento.alimento_1,
-                        f"garbanzo_{index}": alimento.alimento_2,
-                        f"atun_{index}": alimento.alimento_3,
-                        f"pasta_{index}": alimento.alimento_4,
-                        f"tomate_frito_{index}": alimento.alimento_5,
-                        f"galletas_{index}": alimento.alimento_6,
-                        f"macedonia_verdura_{index}": alimento.alimento_7,
-                        f"cacao_{index}": alimento.alimento_8,
-                        f"tarrito_pollo_{index}": alimento.alimento_9,
-                        f"tarrito_fruta_{index}": alimento.alimento_10,
-                        f"leche_{index}": alimento.alimento_11,
-                        f"aceite_{index}": alimento.alimento_12,
+                        f"2022Arroz blanco_{index}": alimento.alimento_1,
+                        f"2022Alubia cocida_{index}": alimento.alimento_2,
+                        f"2022Conserva de atún_{index}": alimento.alimento_3,
+                        f"2022Pasta alimenticia tipo macarrón_{index}": alimento.alimento_4,
+                        f"2022Tomate frito en conserva_{index}": alimento.alimento_5,
+                        f"2022Galletas_{index}": alimento.alimento_6,
+                        f"2022Macedonia de verduras en conserva_{index}": alimento.alimento_7,
+                        f"2022Fruta en conserva_{index}": alimento.alimento_8,
+                        f"2022Cacao soluble_{index}": alimento.alimento_9,
+                        f"2022Tarritos infantiles con pollo_{index}": alimento.alimento_10,
+                        f"2022Tarritos infantiles de fruta_{index}": alimento.alimento_11,
+                        f"2022Leche entera UHT_{index}": alimento.alimento_12,
+                        f"2022Aceite de oliva_{index}": alimento.alimento_13,
                         f"dia_{index}": alimento.fecha_recogida.day,
                         f"mes_{index}": alimento.fecha_recogida.month,
                         f"ano_{index}": alimento.fecha_recogida.year,
                     }
                 )
         field_dictionary.update(dict_alimentos)
-        # print(field_dictionary)
+        print(field_dictionary)
 
         for index in range(pdf_writer.getNumPages()):
             pdf_writer.updatePageFormFieldValues(
@@ -1189,12 +1210,12 @@ def generar_hoja_entrega(request, pk, mode):
                 pdf_writer.getPage(index), field_dictionary[f"page_{index}"]
             )
 
-        # make read only the fields that are fill with data
-        for j in range(0, len(pdf_writer.getPage(index)["/Annots"])):
-            writer_annot = pdf_writer.getPage(index)["/Annots"][j].getObject()
-            for field in field_dictionary:
-                if writer_annot.get("/T") == field:
-                    writer_annot.update({NameObject("/Ff"): NumberObject(1)})
+            # make read only the fields that are fill with data
+            for j in range(0, len(pdf_writer.getPage(index)["/Annots"])):
+                writer_annot = pdf_writer.getPage(index)["/Annots"][j].getObject()
+                for field in field_dictionary:
+                    if writer_annot.get("/T") == field:
+                        writer_annot.update({NameObject("/Ff"): NumberObject(1)})
 
         response = HttpResponse(content_type="application/pdf")
         response[
@@ -1226,7 +1247,7 @@ def generar_hoja_valoracion_social(request, pk):
     document.merge(
         numar_adra=f"{persona.numero_adra}",
         nombre_apellido=f"{persona.nombre_apellido}",
-        dni=f"{persona.dni if persona.dni else persona.otros_documentos }",
+        dni=f"{persona.dni if persona.dni else persona.otros_documentos}",
         fecha_nacimiento=f"{'{:%d-%m-%Y}'.format(persona.fecha_nacimiento)}",
         nacionalidad=f"{persona.nacionalidad}",
         domicilio=f"{persona.domicilio}",
@@ -1367,9 +1388,9 @@ class CustomAllauthAdapter(DefaultAccountAdapter):
             account_confirm_email = "accounts/confirm-email/"
             # prod
             context["activate_url"] = (
-                str(context.get("current_site"))
-                + account_confirm_email
-                + context["key"]
+                    str(context.get("current_site"))
+                    + account_confirm_email
+                    + context["key"]
             )
 
             user = context.get("user")
