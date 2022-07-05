@@ -34,6 +34,7 @@ class PersonaAdmin(admin.ModelAdmin):
     list_filter = (
         "categoria",
         "covid",
+        "active"
     )
     search_fields = (
         "nombre_apellido",
