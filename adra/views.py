@@ -1229,7 +1229,6 @@ def generar_hoja_entrega(request, pk, mode):
 
 def generar_hoja_valoracion_social(request, pk):
     persona = Persona.objects.get(pk=pk, active=True)
-
     template = os.path.join(os.path.abspath("source_files"), "vl.docx")
     document = MailMerge(template)
 

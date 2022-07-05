@@ -4,19 +4,20 @@ import shutil
 import time
 from pathlib import Path
 
+from adra.models import Persona
 from django.core.management.base import BaseCommand
 from mailmerge import MailMerge
-
-from adra.models import Persona
 
 
 class Command(BaseCommand):
 
     def handle(self, *args, **options):
-        persona = Persona.objects.filter(active=True, numero_adra__gt=203, numero_adra__lt=229).order_by("numero_adra")
-        Path("./valoracion").mkdir(parents=True, exist_ok=True)
+        num_adra= [9,31,80,82,87,98,102,121,122,132,133,137,155,157,162,164,167,168,171,176,177,178,180,181,185,186,189,192,196,197,199,201,205,207,208,209,213,215,216,217,218,219,222,223,224,225,230,236,262,346,347,402,404,405,406,407,408,409,410,414,415]
+        print(num_adra)
+        persona = Persona.objects.filter(numero_adra__in=num_adra).order_by("numero_adra")
+        Path("./valoraciones").mkdir(parents=True, exist_ok=True)
 
-        for p in persona[10:50]:
+        for p in persona:
 
             print(p.numero_adra)
             # print(p.nombre_apellido)
@@ -42,7 +43,7 @@ class Command(BaseCommand):
                 ciudad=f'{p.ciudad}',
                 numar_telefon=f'{p.telefono}',
                 # fecha_hoy=f"{'{:%d-%m-%Y}'.format(p.created_at)}",
-                fecha_hoy="03-02-2020",
+                fecha_hoy="12-06-2022",
 
             )
             if p.empadronamiento:
@@ -63,9 +64,9 @@ class Command(BaseCommand):
                 document.merge(h="x")
             document.merge_rows('parentesco', hijos)
 
-            document.write(f'./valoracion/{p.numero_adra}.docx')
+            document.write(f'./valoraciones/{p.numero_adra}.docx')
 
-        os.chdir("./valoracion")
+        os.chdir("./valoraciones")
         for file in glob.glob("*.docx"):
             print(file)
 

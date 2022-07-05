@@ -4,7 +4,9 @@ services:
     image: redis:alpine
     ports:
       - '6379:6379'
+      
   db:
+    restart: always
     image: mysql:8.0
     ports:
       - "3308:3306"
@@ -31,8 +33,9 @@ services:
       - "8000:8000"
     command: >
       sh -c "python manage.py migrate --no-input &&
-            gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
+            python manage.py runserver 0.0.0.0:8000"
     #python manage.py runserver 0.0.0.0:8000 "
+    #gunicorn adra_project.wsgi --bind  0.0.0.0:8000"
     env_file:
       - ./.env
     depends_on:
@@ -51,6 +54,7 @@ services:
       - web
 
   phpmyadmin:
+    restart: always
     image: phpmyadmin/phpmyadmin
     links:
       - db:db

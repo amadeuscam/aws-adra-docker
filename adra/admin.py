@@ -1,6 +1,7 @@
-from django.contrib import admin
 from django.conf import settings
-from .models import Persona, Alimentos, AlmacenAlimentos, Hijo, Profile
+from django.contrib import admin
+
+from .models import Alimentos, AlmacenAlimentos, Hijo, Persona, Profile
 
 
 @admin.register(Profile)
@@ -23,6 +24,11 @@ class HijoAdmin(admin.ModelAdmin):
     list_per_page = 15
 
 
+@admin.action(description="Desactivar beneficiarios")
+def make_published(modeladmin, request, queryset):
+    queryset.update(active=False)
+
+
 class PersonaAdmin(admin.ModelAdmin):
     inlines = [HijoInline]
     list_filter = (
@@ -38,6 +44,7 @@ class PersonaAdmin(admin.ModelAdmin):
         "numero_adra",
         "mensaje",
         "covid",
+        "active"
     )
     list_display_links = (
         "numero_adra",
@@ -47,6 +54,7 @@ class PersonaAdmin(admin.ModelAdmin):
     list_per_page = 15
     sortable_by = ("numero_adra",)
     ordering = ("nombre_apellido", "numero_adra")
+    actions = [make_published]
 
 
 class AlimentosAdmin(admin.ModelAdmin):
